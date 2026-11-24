@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AU GradePro — Anna University UG & PG GPA/CGPA Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans, Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['"Times New Roman"', 'Times', 'Georgia', 'serif'],
+                    },
+                    colors: {
+                        au: {
+                            indigo: '#4f46e5',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        /* Custom subtle scrollbars & print refinements */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.55);
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        @keyframes pulseSoft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.65;
+            }
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.55s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #print-gradesheet-area,
+            #print-gradesheet-area *,
+            #standalone-gpa-report-card.printing-gpa,
+            #standalone-gpa-report-card.printing-gpa * {
+                visibility: visible;
+            }
+
+            #print-gradesheet-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                padding: 20px !important;
+                box-shadow: none !important;
+            }
+
+            #standalone-gpa-report-card.printing-gpa {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                padding: 24px !important;
+                z-index: 9999;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification Banner -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Academic Navigation Header -->
+    <header
+        class="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-slate-900/85 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
+                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1
+                            class="font-display font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white leading-none">
+                            AU GradePro
+                        </h1>
+                        <span
+                            class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/70">
+                            GPA & CGPA
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Anna University UG & PG Grade Suite</p>
+                </div>
+            </div>
+
+            <!-- Global Utility Controls -->
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <button id="btn-font-toggle" onclick="toggleTypographyMode()"
+                    title="Switch Sans / Academic Serif (Times New Roman)"
+                    class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition flex items-center gap-1 text-xs font-semibold">
+                    <span class="font-serif text-sm leading-none">Aa</span>
+                    <span id="font-mode-label" class="hidden xl:inline">Inter</span>
+                </button>
+
+                <button id="btn-export-json" title="Backup Data (JSON)"
+                    class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition flex items-center gap-1.5 text-xs font-medium">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Backup</span>
+                </button>
+
+                <label title="Restore Data (JSON)"
+                    class="cursor-pointer p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition flex items-center gap-1.5 text-xs font-medium">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Restore</span>
+                    <input type="file" id="input-import-json" accept=".json" class="hidden" />
+                </label>
+
+                <button id="btn-grade-sheet"
+                    class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm shadow-indigo-500/20 transition flex items-center gap-1.5">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Grade Sheet</span>
+                </button>
+
+                <button id="btn-theme-toggle" aria-label="Toggle Dark Mode"
+                    class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition">
+                    <i data-lucide="moon" id="icon-moon" class="w-4 h-4 block dark:hidden"></i>
+                    <i data-lucide="sun" id="icon-sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Dedicated Calculator Mode Switcher Hero Banner -->
+        <section
+            class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl p-4 sm:p-5 text-white shadow-md shadow-indigo-500/15 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span
+                        class="px-2 py-0.5 rounded-md bg-white/15 text-[11px] font-bold uppercase tracking-wider">Calculator
+                        Mode</span>
+                    <span id="hero-active-mode-hint" class="text-xs text-indigo-100">Viewing both Single-Semester GPA &
+                        Full Degree CGPA</span>
+                </div>
+                <h2 class="font-display font-extrabold text-lg sm:text-xl mt-1">
+                    Calculate Semester GPA & Cumulative CGPA Instantly
+                </h2>
+            </div>
+
+            <!-- 3-Way Mode Segmented Switcher -->
+            <div
+                class="inline-flex flex-wrap sm:flex-nowrap p-1 rounded-xl bg-slate-950/25 border border-white/15 backdrop-blur-sm self-start lg:self-auto">
+                <button id="mode-btn-gpa" onclick="setCalculatorMode('GPA')"
+                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-indigo-100 hover:text-white">
+                    <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                    <span>Semester GPA Calculator</span>
+                </button>
+                <button id="mode-btn-both" onclick="setCalculatorMode('BOTH')"
+                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-white text-indigo-700 shadow-sm">
+                    <i data-lucide="columns-2" class="w-3.5 h-3.5"></i>
+                    <span>Both Side-by-Side</span>
+                </button>
+                <button id="mode-btn-cgpa" onclick="setCalculatorMode('CGPA')"
+                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-indigo-100 hover:text-white">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                    <span>Full CGPA & Degree Tracker</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 1: Academic Program, Regulation & Specialized Department Configuration -->
+        <section
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 shadow-sm">
+            <div
+                class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800/80">
+                <div>
+                    <span
+                        class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Academic
+                        Profile</span>
+                    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mt-0.5">Program, Regulation
+                        & Specialized Branch</h2>
+                </div>
+
+                <!-- Program Level Segmented Toggle (UG vs PG) -->
+                <div
+                    class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 self-start lg:self-auto">
+                    <button id="btn-level-ug" onclick="setProgramLevel('UG')"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        <span>Undergraduate (B.E./B.Tech)</span>
+                    </button>
+                    <button id="btn-level-pg" onclick="setProgramLevel('PG')"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                        <i data-lucide="award" class="w-4 h-4"></i>
+                        <span>Postgraduate (M.E./M.Tech/MBA/MCA)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selectors Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-5">
+                <!-- Regulation Selector -->
+                <div class="md:col-span-3">
+                    <label for="select-regulation"
+                        class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Anna University Regulation
+                    </label>
+                    <div class="relative">
+                        <select id="select-regulation" onchange="handleRegulationChange(this.value)"
+                            class="w-full appearance-none rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 pr-9 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                            <option value="R2025">Regulation 2025 (Latest)</option>
+                            <option value="R2021" selected>Regulation 2021 (CBCS)</option>
+                            <option value="R2017">Regulation 2017 (CBCS)</option>
+                            <option value="R2013">Regulation 2013</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Specialized Department Selector -->
+                <div class="md:col-span-6">
+                    <label for="select-department"
+                        class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                        <span>Department / Specialized Course</span>
+                        <span id="dept-badge"
+                            class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Specialized
+                            Curriculum Ready</span>
+                    </label>
+                    <div class="relative">
+                        <select id="select-department" onchange="handleDepartmentChange(this.value)"
+                            class="w-full appearance-none rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 pr-9 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                            <!-- Populated dynamically based on UG or PG -->
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Curriculum Template Action -->
+                <div class="md:col-span-3 flex flex-col justify-end">
+                    <button onclick="loadDepartmentTemplate(true)"
+                        class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>Load Sample Curriculum</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grade Scale Reference Strip -->
+            <div
+                class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-medium">
+                    <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    <span id="reg-scale-label">R2021 Grade Points:</span>
+                </div>
+                <div id="grade-scale-pills" class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- All-Semesters GPA Matrix Strip (Visible in BOTH and CGPA modes) -->
+        <section id="all-semesters-matrix-section"
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                    <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">All-Semesters GPA Matrix
+                    </h3>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">• Click any semester
+                        card to inspect or edit</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-mono">
+                    <span class="text-slate-500 dark:text-slate-400">Best GPA: <strong id="matrix-best-gpa"
+                            class="text-emerald-600 dark:text-emerald-400">—</strong></span>
+                    <span class="text-slate-500 dark:text-slate-400">Overall CGPA: <strong id="matrix-overall-cgpa"
+                            class="text-indigo-600 dark:text-indigo-400">0.00</strong></span>
+                </div>
+            </div>
+            <div id="all-semesters-matrix-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- Main 12-Column Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Left 8 Columns: Semester Tabs + Course & Grade Workspace -->
+            <div id="workspace-left-col" class="lg:col-span-8 space-y-5">
+
+                <!-- Standalone Semester GPA Quick-Select Banner (Visible in GPA Mode) -->
+                <div id="standalone-gpa-banner"
+                    class="hidden bg-indigo-50/80 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start sm:items-center gap-3">
+                        <div
+                            class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                            <i data-lucide="calculator" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">
+                                    Single-Semester GPA Calculator</h3>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white">Focused
+                                    Mode</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                                Calculate the exact GPA of any individual semester without touching other semesters.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <label for="standalone-sem-dropdown"
+                            class="text-xs font-semibold text-slate-600 dark:text-slate-300">Target Sem:</label>
+                        <select id="standalone-sem-dropdown" onchange="selectSemester(Number(this.value))"
+                            class="rounded-xl bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-700 px-3 py-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Interactive Semester Selector Bar -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 shadow-sm">
+                    <div class="flex items-center justify-between px-1 mb-2.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Select Semester (<span id="sem-count-label">8 Semesters</span>)
+                        </span>
+                        <label
+                            class="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-300 select-none">
+                            <input type="checkbox" id="toggle-include-arrears" onchange="toggleArrearMode(this.checked)"
+                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5" />
+                            <span>Include U/RA (0 pts) in Denominator</span>
+                        </label>
+                    </div>
+                    <div id="semester-tabs" class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                        <!-- Semester pills injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Active Semester Course Editor Card -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <!-- Card Toolbar -->
+                    <div
+                        class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 dark:bg-slate-900/50">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <h3 id="active-sem-title"
+                                    class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white">
+                                    Semester 1 Courses
+                                </h3>
+                                <span id="active-sem-credits-badge"
+                                    class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
+                                    0 Credits
+                                </span>
+                                <span id="active-sem-live-gpa-pill"
+                                    class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                                    GPA: 0.000
+                                </span>
+                            </div>
+                            <p id="active-sem-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Adjust credits, select grades, or add custom subjects & project work.
+                            </p>
+                        </div>
+
+                        <!-- Quick Fill & Semester Controls -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="relative">
+                                <select id="quick-fill-select" onchange="quickFillGrades(this.value)"
+                                    class="appearance-none rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-3 pr-7 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                                    <option value="">Quick Fill All...</option>
+                                    <!-- Populated dynamically per regulation -->
+                                </select>
+                                <i data-lucide="zap"
+                                    class="w-3.5 h-3.5 text-amber-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            </div>
+
+                            <button onclick="clearCurrentSemester()"
+                                class="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Clear</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Course Table Headers (Desktop) -->
+                    <div
+                        class="hidden sm:grid sm:grid-cols-12 gap-3 px-5 py-2.5 bg-slate-100/70 dark:bg-slate-800/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-slate-800">
+                        <div class="col-span-2">Code</div>
+                        <div class="col-span-5">Course Title / Category</div>
+                        <div class="col-span-2 text-center">Credits</div>
+                        <div class="col-span-2 text-center">Grade</div>
+                        <div class="col-span-1 text-right">Action</div>
+                    </div>
+
+                    <!-- Courses List Container -->
+                    <div id="courses-list" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        <!-- Course rows rendered dynamically -->
+                    </div>
+
+                    <!-- Empty State (shown if 0 courses) -->
+                    <div id="empty-courses-state" class="hidden p-10 text-center">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="folder-open" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-display font-bold text-sm text-slate-800 dark:text-slate-200">No Courses Added
+                            for This Semester</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
+                            Add subjects manually below or click "Load Sample Curriculum" above to auto-fill department
+                            courses.
+                        </p>
+                    </div>
+
+                    <!-- Add Course Footer Bar -->
+                    <div
+                        class="p-4 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="addCourseRow()"
+                                class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-semibold shadow-sm shadow-indigo-500/20 transition flex items-center gap-1.5">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Add Subject</span>
+                            </button>
+                            <button onclick="addPresetCourse('LAB')"
+                                class="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <span>+ Lab (1.5 / 2 Cr)</span>
+                            </button>
+                            <button onclick="addPresetCourse('PROJECT')"
+                                class="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="cpu" class="w-3.5 h-3.5 text-violet-500"></i>
+                                <span>+ Project Work (6 / 10 Cr)</span>
+                            </button>
+                        </div>
+
+                        <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Auto-saved locally</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right 4 Columns: Standalone Semester GPA Report Card, Live Gauges, What-If Simulator & CGPA -->
+            <div id="workspace-right-col" class="lg:col-span-4 space-y-5 lg:sticky lg:top-20">
+
+                <!-- Standalone Semester GPA Report Card (Front-and-center in GPA & BOTH modes) -->
+                <div id="standalone-gpa-report-card"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border-2 border-indigo-500/30 dark:border-indigo-500/40 p-5 shadow-md shadow-indigo-500/5">
+                    <div
+                        class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div>
+                            <span
+                                class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Semester
+                                GPA Report Card</span>
+                            <h3 id="report-sem-heading"
+                                class="font-display font-bold text-base text-slate-900 dark:text-white">Semester 1 GPA
+                                Summary</h3>
+                        </div>
+                        <span id="report-gpa-status-pill"
+                            class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                            All Clear
+                        </span>
+                    </div>
+
+                    <!-- Hero 3-Decimal GPA & Percentage Strip -->
+                    <div
+                        class="my-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white flex items-center justify-between gap-4 shadow-sm">
+                        <div>
+                            <span class="block text-[11px] font-semibold uppercase tracking-wider text-indigo-100">Exact
+                                Semester GPA</span>
+                            <div class="flex items-baseline gap-2 mt-0.5">
+                                <span id="report-exact-gpa"
+                                    class="font-mono font-extrabold text-3xl sm:text-4xl tracking-tight">0.000</span>
+                                <span class="text-xs font-mono text-indigo-200">/ 10.00</span>
+                            </div>
+                            <span id="report-sem-formula"
+                                class="block text-[11px] font-mono text-indigo-100/90 mt-1">Σ(Cᵢ × GPᵢ) / ΣCᵢ = 0.0 /
+                                0</span>
+                        </div>
+
+                        <div class="text-right border-l border-white/20 pl-4">
+                            <span
+                                class="block text-[10px] font-semibold uppercase tracking-wider text-indigo-100">Equiv.
+                                %</span>
+                            <span id="report-sem-percentage" class="font-mono font-bold text-xl">0.00%</span>
+                            <span id="report-sem-subjects-count" class="block text-[11px] text-indigo-100/90 mt-1">0
+                                Subjects</span>
+                        </div>
+                    </div>
+
+                    <!-- 3-Column Credit & Grade Points Metrics -->
+                    <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                        <div
+                            class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                            <span
+                                class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Registered</span>
+                            <span id="report-reg-credits"
+                                class="font-mono font-bold text-sm text-slate-900 dark:text-white mt-0.5 block">0
+                                Cr</span>
+                        </div>
+                        <div
+                            class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                            <span
+                                class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Earned</span>
+                            <span id="report-earned-credits"
+                                class="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 block">0
+                                Cr</span>
+                        </div>
+                        <div
+                            class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+                            <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Grade
+                                Pts</span>
+                            <span id="report-grade-points"
+                                class="font-mono font-bold text-sm text-indigo-600 dark:text-indigo-400 mt-0.5 block">0.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Grade Distribution Breakdown Pills -->
+                    <div class="mb-4">
+                        <span
+                            class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                            Semester Grade Distribution
+                        </span>
+                        <div id="report-grade-distribution" class="flex flex-wrap gap-1.5 font-mono text-xs">
+                            <!-- Populated dynamically e.g. O: 3, A+: 2 -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Copy GPA Slip, Print GPA Slip, Sync to CGPA Tracker -->
+                    <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 no-print">
+                        <button onclick="copySemesterGpaSlip()"
+                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i>
+                            <span>Copy GPA Slip</span>
+                        </button>
+                        <button onclick="printSemesterGpaSlip()"
+                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="printer" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Print GPA Slip</span>
+                        </button>
+                        <button id="btn-sync-to-cgpa" onclick="syncGpaToCgpaTracker()"
+                            class="col-span-2 px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/70 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                            <span>Import into Full CGPA & Degree Tracker</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- What-If Grade Simulator Card -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                            <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">What-If Grade
+                                Simulator</h3>
+                        </div>
+                        <span
+                            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Live
+                            Preview</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        Test how upgrading a subject in <strong id="whatif-sem-label"
+                            class="text-slate-700 dark:text-slate-200">Semester 1</strong> shifts your GPA & CGPA.
+                    </p>
+
+                    <div class="space-y-2.5 mb-3">
+                        <div>
+                            <label
+                                class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Select
+                                Subject</label>
+                            <select id="whatif-course-select" onchange="runWhatIfSimulation()"
+                                class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 items-end">
+                            <div>
+                                <label
+                                    class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Hypothetical
+                                    Grade</label>
+                                <select id="whatif-grade-select" onchange="runWhatIfSimulation()"
+                                    class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <button onclick="applyWhatIfGrade()"
+                                class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition flex items-center justify-center gap-1">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                <span>Apply Grade</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="whatif-result-box"
+                        class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Cumulative CGPA & Dual Gauge Card (Hidden only in pure Single-Semester GPA mode) -->
+                <div id="cgpa-analytics-card"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cumulative
+                            Degree Analytics</span>
+                        <span id="classification-badge"
+                            class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70">
+                            First Class
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Active Semester GPA Gauge -->
+                        <div
+                            class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex flex-col items-center text-center">
+                            <div class="relative w-24 h-24 flex items-center justify-center">
+                                <svg class="w-24 h-24" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8"
+                                        fill="transparent" class="text-slate-200 dark:text-slate-700" />
+                                    <circle id="gpa-ring" cx="50" cy="50" r="40" stroke="#4f46e5" stroke-width="8"
+                                        stroke-linecap="round" fill="transparent" stroke-dasharray="251.2"
+                                        stroke-dashoffset="251.2" class="progress-ring-circle" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="display-sem-gpa"
+                                        class="font-mono font-bold text-xl text-slate-900 dark:text-white">0.00</span>
+                                    <span
+                                        class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">GPA</span>
+                                </div>
+                            </div>
+                            <span id="gauge-sem-label"
+                                class="mt-2 text-xs font-bold text-slate-700 dark:text-slate-200">Semester 1</span>
+                            <span id="gauge-sem-credits"
+                                class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">0 / 0 Cr</span>
+                        </div>
+
+                        <!-- Overall Cumulative CGPA Gauge -->
+                        <div
+                            class="p-3.5 rounded-2xl bg-gradient-to-b from-indigo-50/80 to-violet-50/60 dark:from-indigo-950/40 dark:to-violet-950/30 border border-indigo-200/70 dark:border-indigo-800/50 flex flex-col items-center text-center">
+                            <div class="relative w-24 h-24 flex items-center justify-center">
+                                <svg class="w-24 h-24" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8"
+                                        fill="transparent" class="text-indigo-200/60 dark:text-indigo-900/60" />
+                                    <circle id="cgpa-ring" cx="50" cy="50" r="40" stroke="#10b981" stroke-width="8"
+                                        stroke-linecap="round" fill="transparent" stroke-dasharray="251.2"
+                                        stroke-dashoffset="251.2" class="progress-ring-circle" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="display-overall-cgpa"
+                                        class="font-mono font-bold text-xl text-indigo-700 dark:text-indigo-300">0.00</span>
+                                    <span
+                                        class="text-[10px] font-semibold uppercase tracking-wider text-indigo-500/80 dark:text-indigo-400">CGPA</span>
+                                </div>
+                            </div>
+                            <span class="mt-2 text-xs font-bold text-slate-800 dark:text-slate-100">Overall CGPA</span>
+                            <span id="gauge-total-credits"
+                                class="text-[11px] text-indigo-600/80 dark:text-indigo-300/80 font-mono">0 Total
+                                Cr</span>
+                        </div>
+                    </div>
+
+                    <!-- Key Academic Metrics Breakdown -->
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 dark:text-slate-400">Equivalent Percentage (AU Formula)</span>
+                            <span id="display-percentage"
+                                class="font-mono font-bold text-slate-900 dark:text-white">0.00%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 dark:text-slate-400">Total Credits Earned / Registered</span>
+                            <span id="display-credits-ratio"
+                                class="font-mono font-semibold text-slate-800 dark:text-slate-200">0 / 0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 dark:text-slate-400">Total Grade Points (Σ Cᵢ × GPᵢ)</span>
+                            <span id="display-grade-points"
+                                class="font-mono font-semibold text-slate-800 dark:text-slate-200">0.0</span>
+                        </div>
+                        <div id="arrear-alert-row"
+                            class="hidden flex items-center justify-between text-rose-600 dark:text-rose-400 font-medium pt-1">
+                            <span class="flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                                Standing Arrears (U/RA)</span>
+                            <span id="display-arrear-count" class="font-mono font-bold">0 Subjects</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semester-wise GPA Progression Bar Chart -->
+                <div id="gpa-trajectory-card"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Semester GPA
+                                Trajectory</h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Click any bar to jump to that
+                                semester</p>
+                        </div>
+                        <span class="font-mono text-[11px] font-semibold text-slate-400">Scale 10.0</span>
+                    </div>
+
+                    <div id="gpa-bar-chart"
+                        class="h-36 flex items-end justify-between gap-2 pt-4 pb-1 px-1 border-b border-slate-100 dark:border-slate-800">
+                        <!-- Bars generated dynamically -->
+                    </div>
+                    <div id="gpa-bar-labels"
+                        class="flex items-center justify-between gap-2 pt-2 px-1 text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                        <!-- Labels generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick CGPA Target Estimator Card -->
+                <div id="target-planner-card"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="target" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                        <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Target CGPA Planner
+                        </h3>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        Estimate the average GPA needed in remaining credits to hit your dream CGPA.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2.5 mb-3">
+                        <div>
+                            <label
+                                class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Target
+                                CGPA</label>
+                            <input type="number" id="input-target-cgpa" step="0.05" min="5" max="10" value="8.50"
+                                oninput="updateTargetEstimator()"
+                                class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Remaining
+                                Credits</label>
+                            <input type="number" id="input-remaining-credits" step="1" min="1" max="180" value="40"
+                                oninput="updateTargetEstimator()"
+                                class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    </div>
+                    <div id="target-estimator-result"
+                        class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                        Enter your grades to compute required GPA.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Printable Grade Sheet Modal -->
+    <div id="modal-grade-sheet"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-4xl w-full shadow-2xl overflow-hidden my-auto">
+            <div
+                class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between no-print">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-check-2" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                    <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Consolidated Academic
+                        Grade Summary</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()"
+                        class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>Print / Save PDF</span>
+                    </button>
+                    <button onclick="closeGradeSheetModal()"
+                        class="p-1.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Content -->
+            <div id="print-gradesheet-area" class="p-6 max-h-[78vh] overflow-y-auto space-y-6">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Anna
+                            University Academic Summary</p>
+                        <h4 id="sheet-dept-title"
+                            class="font-display font-extrabold text-xl text-slate-900 dark:text-white mt-0.5">B.E.
+                            Computer Science and Design</h4>
+                        <p id="sheet-meta-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Regulation
+                            2021 • Undergraduate Program</p>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/80 px-4 py-3 rounded-xl border border-slate-200/70 dark:border-slate-700">
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Cumulative CGPA</span>
+                            <span id="sheet-cgpa-val"
+                                class="font-mono font-extrabold text-2xl text-indigo-600 dark:text-indigo-400">0.00</span>
+                        </div>
+                        <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Percentage</span>
+                            <span id="sheet-perc-val"
+                                class="font-mono font-bold text-lg text-slate-800 dark:text-slate-100">0.0%</span>
+                        </div>
+                        <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Classification</span>
+                            <span id="sheet-class-val"
+                                class="text-xs font-bold text-emerald-600 dark:text-emerald-400">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sheet-semesters-breakdown" class="space-y-4">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/60 py-5 mt-8">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <p>AU GradePro — Built for Anna University Affiliated & Autonomous Colleges (UG & PG Regulations 2013–2025).
+            </p>
+            <p class="font-mono">Formula: GPA = Σ(Cᵢ × GPᵢ) / ΣCᵢ • Percentage = CGPA × 10</p>
+        </div>
+    </footer>
+
+    <!-- Comprehensive Application Logic & Curriculum Database -->
+    <script>
+        // =========================================================================
+        // 1. ANNA UNIVERSITY REGULATION GRADE POINT MAPPINGS
+        // =========================================================================
+        const REGULATIONS = {
+            R2025: {
+                name: 'Regulation 2025',
+                grades: [
+                    { label: 'O', points: 10, desc: 'Outstanding' },
+                    { label: 'A+', points: 9, desc: 'Excellent' },
+                    { label: 'A', points: 8, desc: 'Very Good' },
+                    { label: 'B+', points: 7, desc: 'Good' },
+                    { label: 'B', points: 6, desc: 'Average' },
+                    { label: 'C', points: 5, desc: 'Satisfactory' },
+                    { label: 'U', points: 0, desc: 'Re-appearance', isFail: true },
+                    { label: 'SA', points: 0, desc: 'Shortage of Attendance', isFail: true },
+                    { label: 'W', points: 0, desc: 'Withdrawal', isFail: true }
+                ]
+            },
+            R2021: {
+                name: 'Regulation 2021',
+                grades: [
+                    { label: 'O', points: 10, desc: 'Outstanding' },
+                    { label: 'A+', points: 9, desc: 'Excellent' },
+                    { label: 'A', points: 8, desc: 'Very Good' },
+                    { label: 'B+', points: 7, desc: 'Good' },
+                    { label: 'B', points: 6, desc: 'Average' },
+                    { label: 'C', points: 5, desc: 'Satisfactory' },
+                    { label: 'U', points: 0, desc: 'Re-appearance', isFail: true },
+                    { label: 'SA', points: 0, desc: 'Shortage of Attendance', isFail: true },
+                    { label: 'W', points: 0, desc: 'Withdrawal', isFail: true }
+                ]
+            },
+            R2017: {
+                name: 'Regulation 2017',
+                grades: [
+                    { label: 'O', points: 10, desc: 'Outstanding' },
+                    { label: 'A+', points: 9, desc: 'Excellent' },
+                    { label: 'A', points: 8, desc: 'Very Good' },
+                    { label: 'B+', points: 7, desc: 'Good' },
+                    { label: 'B', points: 6, desc: 'Average' },
+                    { label: 'RA', points: 0, desc: 'Re-appearance', isFail: true },
+                    { label: 'SA', points: 0, desc: 'Shortage of Attendance', isFail: true },
+                    { label: 'W', points: 0, desc: 'Withdrawal', isFail: true }
+                ]
+            },
+            R2013: {
+                name: 'Regulation 2013',
+                grades: [
+                    { label: 'S', points: 10, desc: 'Outstanding' },
+                    { label: 'A', points: 9, desc: 'Very Good' },
+                    { label: 'B', points: 8, desc: 'Good' },
+                    { label: 'C', points: 7, desc: 'Average' },
+                    { label: 'D', points: 6, desc: 'Satisfactory' },
+                    { label: 'E', points: 5, desc: 'Pass' },
+                    { label: 'U', points: 0, desc: 'Re-appearance', isFail: true }
+                ]
+            }
+        };
+
+        // =========================================================================
+        // 2. UG & PG DEPARTMENTS (SPECIALIZED + CORE) & CURRICULUM TEMPLATES
+        // =========================================================================
+        const DEPARTMENTS = {
+            UG: [
+                { id: 'CSD', name: 'B.E. Computer Science and Design (CSD)', tag: 'Specialized', hasTemplate: true },
+                { id: 'AGRI', name: 'B.Tech. Agricultural Engineering (AGRI)', tag: 'Specialized', hasTemplate: true },
+                { id: 'AIDS', name: 'B.Tech. Artificial Intelligence & Data Science (AI&DS)', tag: 'Specialized', hasTemplate: true },
+                { id: 'CSBS', name: 'B.Tech. Computer Science & Business Systems (CSBS)', tag: 'Specialized', hasTemplate: true },
+                { id: 'CHEM', name: 'B.Tech. Chemical Engineering (CHEM)', tag: 'Specialized', hasTemplate: true },
+                { id: 'BME', name: 'B.E. Biomedical Engineering (BME)', tag: 'Specialized', hasTemplate: true },
+                { id: 'BIOTECH', name: 'B.Tech. Biotechnology (BIOTECH)', tag: 'Specialized', hasTemplate: true },
+                { id: 'FOOD', name: 'B.Tech. Food Technology (FOOD)', tag: 'Specialized', hasTemplate: false },
+                { id: 'PETRO', name: 'B.Tech. Petroleum Engineering (PETRO)', tag: 'Specialized', hasTemplate: false },
+                { id: 'PHARMA', name: 'B.Tech. Pharmaceutical Technology (PHARMA)', tag: 'Specialized', hasTemplate: false },
+                { id: 'RA', name: 'B.E. Robotics and Automation (R&A)', tag: 'Specialized', hasTemplate: true },
+                { id: 'MECHATRONICS', name: 'B.E. Mechatronics Engineering', tag: 'Specialized', hasTemplate: false },
+                { id: 'AERO', name: 'B.E. Aerospace Engineering', tag: 'Specialized', hasTemplate: false },
+                { id: 'CSE', name: 'B.E. Computer Science & Engineering (CSE)', tag: 'Core', hasTemplate: true },
+                { id: 'IT', name: 'B.Tech. Information Technology (IT)', tag: 'Core', hasTemplate: true },
+                { id: 'ECE', name: 'B.E. Electronics & Communication Engineering (ECE)', tag: 'Core', hasTemplate: true },
+                { id: 'EEE', name: 'B.E. Electrical & Electronics Engineering (EEE)', tag: 'Core', hasTemplate: false },
+                { id: 'MECH', name: 'B.E. Mechanical Engineering (MECH)', tag: 'Core', hasTemplate: false },
+                { id: 'CIVIL', name: 'B.E. Civil Engineering (CIVIL)', tag: 'Core', hasTemplate: false }
+            ],
+            PG: [
+                { id: 'ME_CSE', name: 'M.E. Computer Science & Engineering', tag: 'PG Core', hasTemplate: true },
+                { id: 'MTECH_DS', name: 'M.Tech. Data Science & Analytics', tag: 'PG Specialized', hasTemplate: true },
+                { id: 'ME_VLSI', name: 'M.E. VLSI Design', tag: 'PG Specialized', hasTemplate: true },
+                { id: 'ME_AE', name: 'M.E. Applied Electronics', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'ME_PSE', name: 'M.E. Power Systems Engineering', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'ME_STR', name: 'M.E. Structural Engineering', tag: 'PG Specialized', hasTemplate: true },
+                { id: 'ME_CAD', name: 'M.E. CAD / CAM Engineering', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'ME_THERM', name: 'M.E. Thermal Engineering', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'MTECH_CHEM', name: 'M.Tech. Chemical Engineering', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'MTECH_BIO', name: 'M.Tech. Biotechnology', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'MTECH_ENV', name: 'M.Tech. Environmental Science & Technology', tag: 'PG Specialized', hasTemplate: false },
+                { id: 'MBA', name: 'MBA — Master of Business Administration (Core & Specialized)', tag: 'PG Management', hasTemplate: true },
+                { id: 'MCA', name: 'MCA — Master of Computer Applications', tag: 'PG Computing', hasTemplate: true }
+            ]
+        };
+
+        // Realistic Anna University CBCS Semester-wise Curriculum Templates
+        const CURRICULUM_TEMPLATES = {
+            // UG Specialized: Computer Science and Design (CSD)
+            CSD: {
+                1: [
+                    { code: 'HS3152', title: 'Professional English - I', credits: 3 },
+                    { code: 'MA3151', title: 'Matrices and Calculus', credits: 4 },
+                    { code: 'PH3151', title: 'Engineering Physics', credits: 3 },
+                    { code: 'CY3151', title: 'Engineering Chemistry', credits: 3 },
+                    { code: 'GE3151', title: 'Problem Solving and Python Programming', credits: 3 },
+                    { code: 'GE3152', title: 'Heritage of Tamils', credits: 1 },
+                    { code: 'GE3171', title: 'Python Programming Laboratory', credits: 2 },
+                    { code: 'BS3171', title: 'Physics and Chemistry Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'HS3252', title: 'Professional English - II', credits: 2 },
+                    { code: 'MA3251', title: 'Statistics and Numerical Methods', credits: 4 },
+                    { code: 'PH3256', title: 'Physics for Information Science', credits: 3 },
+                    { code: 'BE3251', title: 'Basic Electrical and Electronics Engineering', credits: 3 },
+                    { code: 'GE3251', title: 'Engineering Graphics', credits: 4 },
+                    { code: 'CS3251', title: 'Programming in C', credits: 3 },
+                    { code: 'GE3252', title: 'Tamils and Technology', credits: 1 },
+                    { code: 'CS3271', title: 'Programming in C Laboratory', credits: 2 }
+                ],
+                3: [
+                    { code: 'MA3354', title: 'Discrete Mathematics', credits: 4 },
+                    { code: 'CS3351', title: 'Digital Principles and Computer Organization', credits: 4 },
+                    { code: 'CD3301', title: 'Design Thinking and Visual Communication', credits: 3 },
+                    { code: 'CS3301', title: 'Data Structures', credits: 3 },
+                    { code: 'CS3391', title: 'Object Oriented Programming', credits: 3 },
+                    { code: 'CS3311', title: 'Data Structures Laboratory', credits: 1.5 },
+                    { code: 'CD3311', title: 'UI/UX & Visual Design Studio', credits: 1.5 },
+                    { code: 'GE3361', title: 'Professional Development', credits: 1 }
+                ],
+                4: [
+                    { code: 'CS3452', title: 'Theory of Computation', credits: 3 },
+                    { code: 'CS3491', title: 'Artificial Intelligence and Machine Learning', credits: 4 },
+                    { code: 'CS3492', title: 'Database Management Systems', credits: 3 },
+                    { code: 'CD3401', title: 'Human Computer Interaction & Ergonomics', credits: 3 },
+                    { code: 'CS3451', title: 'Introduction to Operating Systems', credits: 3 },
+                    { code: 'GE3451', title: 'Environmental Sciences and Sustainability', credits: 2 },
+                    { code: 'CS3461', title: 'Operating Systems Laboratory', credits: 1.5 },
+                    { code: 'CS3481', title: 'Database Management Systems Laboratory', credits: 1.5 }
+                ],
+                5: [
+                    { code: 'CS3591', title: 'Computer Networks', credits: 4 },
+                    { code: 'CD3501', title: 'Computer Graphics and Multimedia Design', credits: 3 },
+                    { code: 'CD3502', title: 'Game Design and Interactive Systems', credits: 3 },
+                    { code: 'CCS375', title: 'Web Technologies (Professional Elective I)', credits: 3 },
+                    { code: 'CCS334', title: 'Big Data Analytics (Professional Elective II)', credits: 3 },
+                    { code: 'CD3511', title: '3D Modeling & Animation Laboratory', credits: 2 }
+                ],
+                6: [
+                    { code: 'CD3601', title: 'Augmented Reality and Virtual Reality (AR/VR)', credits: 4 },
+                    { code: 'CCS356', title: 'Object Oriented Software Engineering', credits: 4 },
+                    { code: 'CD3602', title: 'Design Research & Prototyping', credits: 3 },
+                    { code: 'PE3601', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE3601', title: 'Open Elective I', credits: 3 },
+                    { code: 'CD3611', title: 'Extended Reality (XR) Application Lab', credits: 2 }
+                ],
+                7: [
+                    { code: 'GE3791', title: 'Human Values and Ethics', credits: 2 },
+                    { code: 'MG3791', title: 'Principles of Management', credits: 3 },
+                    { code: 'PE3701', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE3701', title: 'Open Elective II', credits: 3 },
+                    { code: 'CD3711', title: 'Design Capstone Mini Project', credits: 2 }
+                ],
+                8: [
+                    { code: 'CD3811', title: 'Project Work / Internship', credits: 10 }
+                ]
+            },
+
+            // UG Specialized: Agricultural Engineering (AGRI)
+            AGRI: {
+                1: [
+                    { code: 'HS3152', title: 'Professional English - I', credits: 3 },
+                    { code: 'MA3151', title: 'Matrices and Calculus', credits: 4 },
+                    { code: 'PH3151', title: 'Engineering Physics', credits: 3 },
+                    { code: 'CY3151', title: 'Engineering Chemistry', credits: 3 },
+                    { code: 'GE3151', title: 'Problem Solving and Python Programming', credits: 3 },
+                    { code: 'GE3152', title: 'Heritage of Tamils', credits: 1 },
+                    { code: 'GE3171', title: 'Python Programming Laboratory', credits: 2 },
+                    { code: 'BS3171', title: 'Physics and Chemistry Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'HS3252', title: 'Professional English - II', credits: 2 },
+                    { code: 'MA3251', title: 'Statistics and Numerical Methods', credits: 4 },
+                    { code: 'PH3251', title: 'Materials Science', credits: 3 },
+                    { code: 'BE3251', title: 'Basic Electrical and Electronics Engineering', credits: 3 },
+                    { code: 'GE3251', title: 'Engineering Graphics', credits: 4 },
+                    { code: 'AI3201', title: 'Principles of Agricultural Agronomy', credits: 3 },
+                    { code: 'GE3252', title: 'Tamils and Technology', credits: 1 },
+                    { code: 'GE3271', title: 'Engineering Practices Laboratory', credits: 2 }
+                ],
+                3: [
+                    { code: 'MA3351', title: 'Transforms and Partial Differential Equations', credits: 4 },
+                    { code: 'AI3301', title: 'Fluid Mechanics and Hydraulics', credits: 3 },
+                    { code: 'AI3302', title: 'Soil Science and Engineering', credits: 3 },
+                    { code: 'AI3303', title: 'Surveying and Leveling', credits: 3 },
+                    { code: 'ME3391', title: 'Engineering Thermodynamics', credits: 3 },
+                    { code: 'AI3311', title: 'Fluid Mechanics and Soil Laboratory', credits: 1.5 },
+                    { code: 'AI3312', title: 'Surveying Laboratory', credits: 1.5 },
+                    { code: 'GE3361', title: 'Professional Development', credits: 1 }
+                ],
+                4: [
+                    { code: 'AI3401', title: 'Hydrology and Water Resources Engineering', credits: 3 },
+                    { code: 'AI3402', title: 'Tractor and Farm Engines', credits: 3 },
+                    { code: 'AI3403', title: 'Unit Operations in Agricultural Processing', credits: 3 },
+                    { code: 'AI3404', title: 'Theory of Machines', credits: 3 },
+                    { code: 'GE3451', title: 'Environmental Sciences and Sustainability', credits: 2 },
+                    { code: 'AI3411', title: 'Tractor and Farm Engines Laboratory', credits: 1.5 },
+                    { code: 'AI3412', title: 'Post Harvest & Food Processing Lab', credits: 1.5 }
+                ],
+                5: [
+                    { code: 'AI3501', title: 'Irrigation and Drainage Engineering', credits: 3 },
+                    { code: 'AI3502', title: 'Farm Machinery and Equipment', credits: 3 },
+                    { code: 'AI3503', title: 'Soil and Water Conservation Engineering', credits: 3 },
+                    { code: 'PE3501', title: 'Precision Farming & Drone Tech (Elective I)', credits: 3 },
+                    { code: 'PE3502', title: 'Dairy & Food Engineering (Elective II)', credits: 3 },
+                    { code: 'AI3511', title: 'Irrigation & Field Machinery Lab', credits: 2 }
+                ],
+                6: [
+                    { code: 'AI3601', title: 'Protected Cultivation & Greenhouse Tech', credits: 3 },
+                    { code: 'AI3602', title: 'Renewable Energy in Agriculture', credits: 3 },
+                    { code: 'AI3603', title: 'Remote Sensing and GIS Applications', credits: 3 },
+                    { code: 'PE3601', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE3601', title: 'Open Elective I', credits: 3 },
+                    { code: 'AI3611', title: 'GIS & Remote Sensing Laboratory', credits: 2 }
+                ],
+                7: [
+                    { code: 'GE3791', title: 'Human Values and Ethics', credits: 2 },
+                    { code: 'AI3701', title: 'Agri-Business Management & Entrepreneurship', credits: 3 },
+                    { code: 'PE3701', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE3701', title: 'Open Elective II', credits: 3 },
+                    { code: 'AI3711', title: 'In-Plant Training / Industrial Internship', credits: 2 }
+                ],
+                8: [
+                    { code: 'AI3811', title: 'Project Work / Field Dissertation', credits: 10 }
+                ]
+            },
+
+            // UG Specialized: AI & Data Science (AIDS)
+            AIDS: {
+                1: [
+                    { code: 'HS3152', title: 'Professional English - I', credits: 3 },
+                    { code: 'MA3151', title: 'Matrices and Calculus', credits: 4 },
+                    { code: 'PH3151', title: 'Engineering Physics', credits: 3 },
+                    { code: 'CY3151', title: 'Engineering Chemistry', credits: 3 },
+                    { code: 'GE3151', title: 'Problem Solving and Python Programming', credits: 3 },
+                    { code: 'GE3152', title: 'Heritage of Tamils', credits: 1 },
+                    { code: 'GE3171', title: 'Python Programming Laboratory', credits: 2 },
+                    { code: 'BS3171', title: 'Physics and Chemistry Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'HS3252', title: 'Professional English - II', credits: 2 },
+                    { code: 'MA3251', title: 'Statistics and Numerical Methods', credits: 4 },
+                    { code: 'PH3256', title: 'Physics for Information Science', credits: 3 },
+                    { code: 'AD3251', title: 'Data Structures Design', credits: 3 },
+                    { code: 'GE3251', title: 'Engineering Graphics', credits: 4 },
+                    { code: 'AD3271', title: 'Data Structures Design Laboratory', credits: 2 },
+                    { code: 'GE3252', title: 'Tamils and Technology', credits: 1 }
+                ],
+                3: [
+                    { code: 'MA3354', title: 'Discrete Mathematics', credits: 4 },
+                    { code: 'CS3351', title: 'Digital Principles and Computer Organization', credits: 4 },
+                    { code: 'AD3391', title: 'Database Design and Management', credits: 3 },
+                    { code: 'AD3351', title: 'Design and Analysis of Algorithms', credits: 4 },
+                    { code: 'AD3301', title: 'Data Exploration and Visualization', credits: 4 },
+                    { code: 'AL3391', title: 'Artificial Intelligence', credits: 3 },
+                    { code: 'AD3381', title: 'Database Design & Management Lab', credits: 1.5 },
+                    { code: 'AD3311', title: 'Artificial Intelligence Laboratory', credits: 1.5 }
+                ],
+                4: [
+                    { code: 'MA3391', title: 'Probability and Statistics', credits: 4 },
+                    { code: 'AL3452', title: 'Operating Systems', credits: 4 },
+                    { code: 'AL3451', title: 'Machine Learning', credits: 3 },
+                    { code: 'AD3491', title: 'Fundamentals of Data Science and Analytics', credits: 3 },
+                    { code: 'CS3591', title: 'Computer Networks', credits: 4 },
+                    { code: 'GE3451', title: 'Environmental Sciences and Sustainability', credits: 2 },
+                    { code: 'AD3411', title: 'Data Science and Analytics Laboratory', credits: 2 },
+                    { code: 'AD3461', title: 'Machine Learning Laboratory', credits: 2 }
+                ],
+                5: [
+                    { code: 'AD3501', title: 'Deep Learning', credits: 3 },
+                    { code: 'CW3551', title: 'Data and Information Security', credits: 3 },
+                    { code: 'CS3551', title: 'Distributed Computing', credits: 3 },
+                    { code: 'CCS334', title: 'Big Data Analytics (Elective I)', credits: 3 },
+                    { code: 'CCS355', title: 'Neural Networks & NLP (Elective II)', credits: 3 },
+                    { code: 'AD3511', title: 'Deep Learning Laboratory', credits: 2 }
+                ],
+                6: [
+                    { code: 'CS3691', title: 'Embedded Systems and IoT', credits: 4 },
+                    { code: 'AD3601', title: 'Reinforcement Learning & Generative AI', credits: 3 },
+                    { code: 'PE3601', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE3601', title: 'Open Elective I', credits: 3 },
+                    { code: 'AD3611', title: 'AI Mini Project & Cloud Deployment Lab', credits: 2 }
+                ],
+                7: [
+                    { code: 'GE3791', title: 'Human Values and Ethics', credits: 2 },
+                    { code: 'GE3752', title: 'Total Quality Management', credits: 3 },
+                    { code: 'PE3701', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE3701', title: 'Open Elective II', credits: 3 }
+                ],
+                8: [
+                    { code: 'AD3811', title: 'Project Work / Industry Internship', credits: 10 }
+                ]
+            },
+
+            // PG Core: M.E. Computer Science & Engineering (4 Semesters)
+            ME_CSE: {
+                1: [
+                    { code: 'MA4151', title: 'Applied Probability and Statistics for Computer Science', credits: 4 },
+                    { code: 'CP4151', title: 'Advanced Data Structures and Algorithms', credits: 4 },
+                    { code: 'CP4152', title: 'Database Practices', credits: 3 },
+                    { code: 'CP4153', title: 'Network Technologies', credits: 3 },
+                    { code: 'CP4154', title: 'Principles of Programming Languages', credits: 3 },
+                    { code: 'RM4151', title: 'Research Methodology and IPR', credits: 2 },
+                    { code: 'CP4161', title: 'Advanced Data Structures & Algorithms Lab', credits: 2 }
+                ],
+                2: [
+                    { code: 'CP4291', title: 'Internet of Things', credits: 3 },
+                    { code: 'CP4292', title: 'Multicore Architecture and Programming', credits: 3 },
+                    { code: 'CP4252', title: 'Machine Learning', credits: 3 },
+                    { code: 'CP4211', title: 'Term Paper Writing and Seminar', credits: 1 },
+                    { code: 'PE4201', title: 'Professional Elective I (Cloud / Security)', credits: 3 },
+                    { code: 'PE4202', title: 'Professional Elective II (Deep Learning)', credits: 3 },
+                    { code: 'CP4261', title: 'Machine Learning Laboratory', credits: 2 }
+                ],
+                3: [
+                    { code: 'PE4301', title: 'Professional Elective III', credits: 3 },
+                    { code: 'PE4302', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE4301', title: 'Open Elective', credits: 3 },
+                    { code: 'CP4311', title: 'Project Work Phase - I', credits: 6 }
+                ],
+                4: [
+                    { code: 'CP4411', title: 'Project Work Phase - II (Thesis)', credits: 12 }
+                ]
+            },
+
+            // PG Specialized: M.Tech Data Science & Analytics (4 Semesters)
+            MTECH_DS: {
+                1: [
+                    { code: 'MA4152', title: 'Mathematical Foundations for Data Science', credits: 4 },
+                    { code: 'DS4101', title: 'Statistical Inference & Stochastic Processes', credits: 4 },
+                    { code: 'DS4102', title: 'Big Data Architecture & Distributed Systems', credits: 3 },
+                    { code: 'DS4103', title: 'Python & R for Data Analytics', credits: 3 },
+                    { code: 'RM4151', title: 'Research Methodology and IPR', credits: 2 },
+                    { code: 'DS4111', title: 'Data Analytics & Visualization Lab', credits: 2 }
+                ],
+                2: [
+                    { code: 'DS4201', title: 'Deep Learning & Neural Architectures', credits: 4 },
+                    { code: 'DS4202', title: 'Natural Language Processing & LLMs', credits: 3 },
+                    { code: 'DS4203', title: 'Time Series Forecasting & Econometrics', credits: 3 },
+                    { code: 'PE4201', title: 'Professional Elective I (Computer Vision)', credits: 3 },
+                    { code: 'PE4202', title: 'Professional Elective II (MLOps & Cloud)', credits: 3 },
+                    { code: 'DS4211', title: 'Deep Learning & NLP Studio', credits: 2 }
+                ],
+                3: [
+                    { code: 'PE4301', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE4301', title: 'Open Elective', credits: 3 },
+                    { code: 'DS4311', title: 'Research Dissertation Phase - I', credits: 6 }
+                ],
+                4: [
+                    { code: 'DS4411', title: 'Research Dissertation Phase - II', credits: 12 }
+                ]
+            },
+
+            // PG Management: MBA (4 Semesters)
+            MBA: {
+                1: [
+                    { code: 'BA4101', title: 'Statistics for Management', credits: 4 },
+                    { code: 'BA4102', title: 'Management Concepts and Organizational Behavior', credits: 3 },
+                    { code: 'BA4103', title: 'Managerial Economics', credits: 3 },
+                    { code: 'BA4104', title: 'Accounting for Decision Making', credits: 3 },
+                    { code: 'BA4105', title: 'Legal Aspects of Business', credits: 3 },
+                    { code: 'BA4106', title: 'Information Management', credits: 3 },
+                    { code: 'BA4111', title: 'Indian Ethos and Business Communication Lab', credits: 2 }
+                ],
+                2: [
+                    { code: 'BA4201', title: 'Applied Operations Research', credits: 3 },
+                    { code: 'BA4202', title: 'Financial Management', credits: 3 },
+                    { code: 'BA4203', title: 'Human Resource Management', credits: 3 },
+                    { code: 'BA4204', title: 'Operations Management', credits: 3 },
+                    { code: 'BA4205', title: 'Business Research Methods', credits: 3 },
+                    { code: 'BA4206', title: 'Business Analytics', credits: 3 },
+                    { code: 'BA4207', title: 'Marketing Management', credits: 3 },
+                    { code: 'BA4211', title: 'Data Analysis and Business Modeling Lab', credits: 2 }
+                ],
+                3: [
+                    { code: 'BA4301', title: 'Strategic Management', credits: 3 },
+                    { code: 'BA4302', title: 'International Business', credits: 3 },
+                    { code: 'SP4301', title: 'Specialization Elective I (Finance/HR/Marketing/BA)', credits: 3 },
+                    { code: 'SP4302', title: 'Specialization Elective II', credits: 3 },
+                    { code: 'SP4303', title: 'Specialization Elective III', credits: 3 },
+                    { code: 'SP4304', title: 'Specialization Elective IV', credits: 3 },
+                    { code: 'BA4311', title: 'Summer Internship / Industrial Project', credits: 4 }
+                ],
+                4: [
+                    { code: 'BA4411', title: 'Final Project Work / Management Thesis', credits: 12 }
+                ]
+            },
+
+            // PG Computing: MCA (4 Semesters)
+            MCA: {
+                1: [
+                    { code: 'MA4153', title: 'Mathematical Foundations of Computer Applications', credits: 4 },
+                    { code: 'MC4101', title: 'Advanced Data Structures and Algorithms', credits: 4 },
+                    { code: 'MC4102', title: 'Object Oriented Software Engineering', credits: 3 },
+                    { code: 'MC4103', title: 'Database Management Systems', credits: 3 },
+                    { code: 'MC4104', title: 'Python Programming', credits: 3 },
+                    { code: 'MC4111', title: 'Data Structures and Python Lab', credits: 2 },
+                    { code: 'MC4112', title: 'DBMS Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'MC4201', title: 'Full Stack Web Development', credits: 3 },
+                    { code: 'MC4202', title: 'Mobile Application Development', credits: 3 },
+                    { code: 'MC4203', title: 'Cloud Computing Technologies', credits: 3 },
+                    { code: 'MC4204', title: 'Artificial Intelligence & Machine Learning', credits: 4 },
+                    { code: 'PE4201', title: 'Professional Elective I', credits: 3 },
+                    { code: 'MC4211', title: 'Full Stack & Mobile App Lab', credits: 2 },
+                    { code: 'MC4212', title: 'AI & Cloud Laboratory', credits: 2 }
+                ],
+                3: [
+                    { code: 'MC4301', title: 'Cyber Security and Blockchain', credits: 3 },
+                    { code: 'MC4302', title: 'Internet of Things & Edge Computing', credits: 3 },
+                    { code: 'PE4301', title: 'Professional Elective II', credits: 3 },
+                    { code: 'PE4302', title: 'Professional Elective III', credits: 3 },
+                    { code: 'MC4311', title: 'Mini Project & Technical Seminar', credits: 3 }
+                ],
+                4: [
+                    { code: 'MC4411', title: 'Project Work / Industry Internship', credits: 12 }
+                ]
+            },
+
+            // UG Specialized: Chemical Engineering (CHEM)
+            CHEM: {
+                1: [
+                    { code: 'HS3152', title: 'Professional English - I', credits: 3 },
+                    { code: 'MA3151', title: 'Matrices and Calculus', credits: 4 },
+                    { code: 'PH3151', title: 'Engineering Physics', credits: 3 },
+                    { code: 'CY3151', title: 'Engineering Chemistry', credits: 3 },
+                    { code: 'GE3151', title: 'Problem Solving and Python Programming', credits: 3 },
+                    { code: 'GE3152', title: 'Heritage of Tamils', credits: 1 },
+                    { code: 'GE3171', title: 'Python Programming Laboratory', credits: 2 },
+                    { code: 'BS3171', title: 'Physics and Chemistry Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'HS3252', title: 'Professional English - II', credits: 2 },
+                    { code: 'MA3251', title: 'Statistics and Numerical Methods', credits: 4 },
+                    { code: 'PH3251', title: 'Materials Science', credits: 3 },
+                    { code: 'BE3251', title: 'Basic Electrical and Electronics Engineering', credits: 3 },
+                    { code: 'GE3251', title: 'Engineering Graphics', credits: 4 },
+                    { code: 'CH3201', title: 'Principles of Chemical Engineering', credits: 3 },
+                    { code: 'GE3252', title: 'Tamils and Technology', credits: 1 },
+                    { code: 'GE3271', title: 'Engineering Practices Laboratory', credits: 2 }
+                ],
+                3: [
+                    { code: 'MA3351', title: 'Transforms and Partial Differential Equations', credits: 4 },
+                    { code: 'CH3301', title: 'Chemical Process Calculations', credits: 3 },
+                    { code: 'CH3302', title: 'Fluid Mechanics for Chemical Engineers', credits: 3 },
+                    { code: 'CH3303', title: 'Mechanical Operations', credits: 3 },
+                    { code: 'CH3304', title: 'Organic and Physical Chemistry', credits: 3 },
+                    { code: 'CH3311', title: 'Fluid Mechanics & Mechanical Operations Lab', credits: 2 },
+                    { code: 'GE3361', title: 'Professional Development', credits: 1 }
+                ],
+                4: [
+                    { code: 'CH3401', title: 'Chemical Engineering Thermodynamics', credits: 4 },
+                    { code: 'CH3402', title: 'Heat Transfer', credits: 3 },
+                    { code: 'CH3403', title: 'Mass Transfer - I', credits: 3 },
+                    { code: 'CH3404', title: 'Chemical Process Industries', credits: 3 },
+                    { code: 'GE3451', title: 'Environmental Sciences and Sustainability', credits: 2 },
+                    { code: 'CH3411', title: 'Heat Transfer Laboratory', credits: 2 }
+                ],
+                5: [
+                    { code: 'CH3501', title: 'Mass Transfer - II', credits: 4 },
+                    { code: 'CH3502', title: 'Chemical Reaction Engineering - I', credits: 3 },
+                    { code: 'CH3503', title: 'Process Instrumentation Dynamics & Control', credits: 3 },
+                    { code: 'PE3501', title: 'Petrochemical Technology (Elective I)', credits: 3 },
+                    { code: 'PE3502', title: 'Polymer Technology (Elective II)', credits: 3 },
+                    { code: 'CH3511', title: 'Mass Transfer & Reaction Engg Lab', credits: 2 }
+                ],
+                6: [
+                    { code: 'CH3601', title: 'Chemical Reaction Engineering - II', credits: 3 },
+                    { code: 'CH3602', title: 'Transport Phenomena', credits: 3 },
+                    { code: 'CH3603', title: 'Chemical Process Equipment Design', credits: 4 },
+                    { code: 'PE3601', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE3601', title: 'Open Elective I', credits: 3 },
+                    { code: 'CH3611', title: 'Process Control & Simulation Lab', credits: 2 }
+                ],
+                7: [
+                    { code: 'GE3791', title: 'Human Values and Ethics', credits: 2 },
+                    { code: 'CH3701', title: 'Process Economics & Plant Safety', credits: 3 },
+                    { code: 'PE3701', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE3701', title: 'Open Elective II', credits: 3 },
+                    { code: 'CH3711', title: 'Industrial Training / Plant Design Project', credits: 2 }
+                ],
+                8: [
+                    { code: 'CH3811', title: 'Project Work / Plant Thesis', credits: 10 }
+                ]
+            },
+
+            // UG Specialized: Biomedical Engineering (BME)
+            BME: {
+                1: [
+                    { code: 'HS3152', title: 'Professional English - I', credits: 3 },
+                    { code: 'MA3151', title: 'Matrices and Calculus', credits: 4 },
+                    { code: 'PH3151', title: 'Engineering Physics', credits: 3 },
+                    { code: 'CY3151', title: 'Engineering Chemistry', credits: 3 },
+                    { code: 'GE3151', title: 'Problem Solving and Python Programming', credits: 3 },
+                    { code: 'GE3152', title: 'Heritage of Tamils', credits: 1 },
+                    { code: 'GE3171', title: 'Python Programming Laboratory', credits: 2 },
+                    { code: 'BS3171', title: 'Physics and Chemistry Laboratory', credits: 2 }
+                ],
+                2: [
+                    { code: 'HS3252', title: 'Professional English - II', credits: 2 },
+                    { code: 'MA3251', title: 'Statistics and Numerical Methods', credits: 4 },
+                    { code: 'PH3254', title: 'Physics for Electronics Engineering', credits: 3 },
+                    { code: 'BM3251', title: 'Biosciences for Medical Engineering', credits: 3 },
+                    { code: 'GE3251', title: 'Engineering Graphics', credits: 4 },
+                    { code: 'EC3251', title: 'Circuit Analysis', credits: 4 },
+                    { code: 'GE3252', title: 'Tamils and Technology', credits: 1 },
+                    { code: 'BM3271', title: 'Biosciences Laboratory', credits: 1.5 }
+                ],
+                3: [
+                    { code: 'MA3355', title: 'Random Processes and Linear Algebra', credits: 4 },
+                    { code: 'BM3301', title: 'Sensors and Measurements', credits: 3 },
+                    { code: 'BM3352', title: 'Anatomy and Human Physiology', credits: 3 },
+                    { code: 'EC3353', title: 'Electronic Devices and Circuits', credits: 3 },
+                    { code: 'EC3354', title: 'Signals and Systems', credits: 4 },
+                    { code: 'BM3311', title: 'Human Physiology & Sensors Lab', credits: 1.5 },
+                    { code: 'GE3361', title: 'Professional Development', credits: 1 }
+                ],
+                4: [
+                    { code: 'BM3401', title: 'Biomedical Instrumentation', credits: 3 },
+                    { code: 'BM3402', title: 'Analog and Digital Integrated Circuits', credits: 3 },
+                    { code: 'BM3491', title: 'Biomedical Signal Processing', credits: 4 },
+                    { code: 'BM3451', title: 'Bio Control Systems', credits: 3 },
+                    { code: 'GE3451', title: 'Environmental Sciences and Sustainability', credits: 2 },
+                    { code: 'BM3411', title: 'Biomedical Instrumentation Lab', credits: 1.5 }
+                ],
+                5: [
+                    { code: 'BM3501', title: 'Diagnostic and Therapeutic Equipment', credits: 3 },
+                    { code: 'BM3502', title: 'Biomaterials and Artificial Organs', credits: 3 },
+                    { code: 'CS3491', title: 'Artificial Intelligence & Machine Learning in Healthcare', credits: 4 },
+                    { code: 'PE3501', title: 'Medical Optics & Lasers (Elective I)', credits: 3 },
+                    { code: 'PE3502', title: 'Wearable Medical Devices (Elective II)', credits: 3 },
+                    { code: 'BM3511', title: 'Diagnostic & Therapeutic Equipment Lab', credits: 2 }
+                ],
+                6: [
+                    { code: 'BM3601', title: 'Medical Image Processing', credits: 4 },
+                    { code: 'BM3602', title: 'Biomechanics and Rehabilitation Engineering', credits: 3 },
+                    { code: 'PE3601', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE3601', title: 'Open Elective I', credits: 3 },
+                    { code: 'BM3611', title: 'Medical Image Processing Laboratory', credits: 2 }
+                ],
+                7: [
+                    { code: 'GE3791', title: 'Human Values and Ethics', credits: 2 },
+                    { code: 'BM3701', title: 'Hospital Management & Medical Standards', credits: 3 },
+                    { code: 'PE3701', title: 'Professional Elective IV', credits: 3 },
+                    { code: 'OE3701', title: 'Open Elective II', credits: 3 },
+                    { code: 'BM3711', title: 'Hospital Clinical Internship', credits: 2 }
+                ],
+                8: [
+                    { code: 'BM3811', title: 'Project Work / Clinical Prototype', credits: 10 }
+                ]
+            },
+
+            // PG Specialized: M.E. VLSI Design (4 Semesters)
+            ME_VLSI: {
+                1: [
+                    { code: 'MA4154', title: 'Applied Mathematics for Electronics Engineers', credits: 4 },
+                    { code: 'VL4151', title: 'Digital CMOS VLSI Design', credits: 4 },
+                    { code: 'VL4152', title: 'Analog IC Design', credits: 3 },
+                    { code: 'VL4153', title: 'Hardware Description Languages (SystemVerilog)', credits: 3 },
+                    { code: 'RM4151', title: 'Research Methodology and IPR', credits: 2 },
+                    { code: 'VL4161', title: 'VLSI Design & FPGA Synthesis Lab', credits: 2 }
+                ],
+                2: [
+                    { code: 'VL4251', title: 'VLSI Signal Processing', credits: 3 },
+                    { code: 'VL4252', title: 'Testing and Verification of VLSI Circuits', credits: 3 },
+                    { code: 'VL4253', title: 'Low Power VLSI Design', credits: 3 },
+                    { code: 'PE4201', title: 'Physical Design Automation (Elective I)', credits: 3 },
+                    { code: 'PE4202', title: 'SoC Architecture (Elective II)', credits: 3 },
+                    { code: 'VL4261', title: 'Analog & Physical Design CAD Lab', credits: 2 }
+                ],
+                3: [
+                    { code: 'PE4301', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE4301', title: 'Open Elective', credits: 3 },
+                    { code: 'VL4311', title: 'Project Work Phase - I', credits: 6 }
+                ],
+                4: [
+                    { code: 'VL4411', title: 'Project Work Phase - II (Silicon/EDA Thesis)', credits: 12 }
+                ]
+            },
+
+            // PG Specialized: M.E. Structural Engineering (4 Semesters)
+            ME_STR: {
+                1: [
+                    { code: 'MA4155', title: 'Advanced Mathematical Methods in Engineering', credits: 4 },
+                    { code: 'ST4151', title: 'Theory of Elasticity and Plasticity', credits: 3 },
+                    { code: 'ST4152', title: 'Structural Dynamics', credits: 4 },
+                    { code: 'ST4153', title: 'Advanced Concrete Technology', credits: 3 },
+                    { code: 'RM4151', title: 'Research Methodology and IPR', credits: 2 },
+                    { code: 'ST4161', title: 'Advanced Structural Engineering Lab', credits: 2 }
+                ],
+                2: [
+                    { code: 'ST4251', title: 'Finite Element Analysis of Structures', credits: 4 },
+                    { code: 'ST4252', title: 'Earthquake Resistant Design of Structures', credits: 3 },
+                    { code: 'ST4253', title: 'Design of Steel-Concrete Composite Structures', credits: 3 },
+                    { code: 'PE4201', title: 'Prestressed Concrete (Elective I)', credits: 3 },
+                    { code: 'PE4202', title: 'Bridge Engineering (Elective II)', credits: 3 },
+                    { code: 'ST4261', title: 'Structural CAD & FEA Simulation Lab', credits: 2 }
+                ],
+                3: [
+                    { code: 'PE4301', title: 'Professional Elective III', credits: 3 },
+                    { code: 'OE4301', title: 'Open Elective', credits: 3 },
+                    { code: 'ST4311', title: 'Project Work Phase - I', credits: 6 }
+                ],
+                4: [
+                    { code: 'ST4411', title: 'Project Work Phase - II (Structural Thesis)', credits: 12 }
+                ]
+            }
+        };
+
+        // Fallback generator for departments without explicit full 8/4-sem templates
+        function getDepartmentCurriculum(deptId, level) {
+            if (CURRICULUM_TEMPLATES[deptId]) {
+                return JSON.parse(JSON.stringify(CURRICULUM_TEMPLATES[deptId]));
+            }
+            if (level === 'UG') {
+                // Reuse standard AU R2021/R2025 common Sem 1 & Sem 2 + generic core structure for Sem 3-8
+                const base = JSON.parse(JSON.stringify(CURRICULUM_TEMPLATES.CSD));
+                for (let s = 3; s <= 7; s++) {
+                    base[s] = base[s].map((c, idx) => ({
+                        code: `${deptId.slice(0, 2)}3${s}0${idx + 1}`,
+                        title: c.title.replace('Design', deptId).replace('UI/UX & Visual', `${deptId} Core`),
+                        credits: c.credits
+                    }));
+                }
+                base[8] = [{ code: `${deptId.slice(0, 2)}3811`, title: `${deptId} Final Year Project Work`, credits: 10 }];
+                return base;
+            } else {
+                // PG 4-semester generic template
+                const base = JSON.parse(JSON.stringify(CURRICULUM_TEMPLATES.ME_CSE));
+                for (let s = 1; s <= 4; s++) {
+                    base[s] = base[s].map((c, idx) => ({
+                        code: `${deptId.slice(0, 2)}4${s}0${idx + 1}`,
+                        title: s === 4 ? `${deptId} Thesis / Project Phase II` : c.title,
+                        credits: c.credits
+                    }));
+                }
+                return base;
+            }
+        }
+
+        // =========================================================================
+        // 3. APPLICATION STATE & STORAGE ENGINE
+        // =========================================================================
+        const STORAGE_KEY = 'au_gradepro_state_v2';
+
+        let appState = {
+            calculatorMode: 'BOTH', // 'GPA' | 'BOTH' | 'CGPA'
+            fontMode: 'SANS',       // 'SANS' | 'SERIF'
+            level: 'UG',            // 'UG' (8 sems) or 'PG' (4 sems)
+            regulation: 'R2021',    // 'R2025', 'R2021', 'R2017', 'R2013'
+            department: 'CSD',
+            activeSemester: 1,
+            includeArrears: false,
+            semesters: {}           // { 1: [ { id, code, title, credits, grade } ], ... }
+        };
+
+        function generateId() {
+            return 'c_' + Math.random().toString(36).substring(2, 9);
+        }
+
+        function getMaxSemesters() {
+            return appState.level === 'UG' ? 8 : 4;
+        }
+
+        function getDefaultPassingGrade() {
+            return appState.regulation === 'R2013' ? 'A' : 'A+';
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('LocalStorage unavailable:', e);
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('au_gradepro_state_v1');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    appState = { ...appState, ...parsed };
+                    return true;
+                }
+            } catch (e) {
+                console.warn('Error loading saved state:', e);
+            }
+            return false;
+        }
+
+        // =========================================================================
+        // 4. INITIALIZATION, THEME, TYPOGRAPHY & CALCULATOR MODE SWITCHER
+        // =========================================================================
+        function initTheme() {
+            const savedTheme = localStorage.getItem('au_gradepro_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function applyTypographyMode() {
+            const label = document.getElementById('font-mode-label');
+            if (appState.fontMode === 'SERIF') {
+                document.body.classList.add('font-serif');
+                document.body.classList.remove('font-sans');
+                if (label) label.textContent = 'Times';
+            } else {
+                document.body.classList.remove('font-serif');
+                document.body.classList.add('font-sans');
+                if (label) label.textContent = 'Inter';
+            }
+        }
+
+        function toggleTypographyMode() {
+            appState.fontMode = appState.fontMode === 'SANS' ? 'SERIF' : 'SANS';
+            applyTypographyMode();
+            saveState();
+            showToast(`Typography switched to ${appState.fontMode === 'SERIF' ? 'Times New Roman (Academic)' : 'Inter (Modern Sans)'}`);
+        }
+
+        function setCalculatorMode(mode) {
+            appState.calculatorMode = mode;
+            updateCalculatorModeUI();
+            saveState();
+        }
+
+        function updateCalculatorModeUI() {
+            const mode = appState.calculatorMode || 'BOTH';
+            const btnGpa = document.getElementById('mode-btn-gpa');
+            const btnBoth = document.getElementById('mode-btn-both');
+            const btnCgpa = document.getElementById('mode-btn-cgpa');
+
+            const activeClasses = ['bg-white', 'text-indigo-700', 'shadow-sm'];
+            const inactiveClasses = ['text-indigo-100', 'hover:text-white'];
+
+            [
+                { el: btnGpa, key: 'GPA' },
+                { el: btnBoth, key: 'BOTH' },
+                { el: btnCgpa, key: 'CGPA' }
+            ].forEach(item => {
+                if (!item.el) return;
+                if (item.key === mode) {
+                    item.el.classList.add(...activeClasses);
+                    item.el.classList.remove(...inactiveClasses);
+                } else {
+                    item.el.classList.remove(...activeClasses);
+                    item.el.classList.add(...inactiveClasses);
+                }
+            });
+
+            const matrixSection = document.getElementById('all-semesters-matrix-section');
+            const standaloneBanner = document.getElementById('standalone-gpa-banner');
+            const standaloneCard = document.getElementById('standalone-gpa-report-card');
+            const cgpaAnalyticsCard = document.getElementById('cgpa-analytics-card');
+            const trajectoryCard = document.getElementById('gpa-trajectory-card');
+            const targetPlannerCard = document.getElementById('target-planner-card');
+            const syncBtn = document.getElementById('btn-sync-to-cgpa');
+            const hintEl = document.getElementById('hero-active-mode-hint');
+
+            if (mode === 'GPA') {
+                matrixSection.classList.add('hidden');
+                standaloneBanner.classList.remove('hidden');
+                standaloneCard.classList.remove('hidden');
+                cgpaAnalyticsCard.classList.add('hidden');
+                trajectoryCard.classList.add('hidden');
+                targetPlannerCard.classList.add('hidden');
+                if (syncBtn) syncBtn.classList.remove('hidden');
+                if (hintEl) hintEl.textContent = 'Focused Single-Semester GPA Calculator Mode';
+            } else if (mode === 'CGPA') {
+                matrixSection.classList.remove('hidden');
+                standaloneBanner.classList.add('hidden');
+                standaloneCard.classList.add('hidden');
+                cgpaAnalyticsCard.classList.remove('hidden');
+                trajectoryCard.classList.remove('hidden');
+                targetPlannerCard.classList.remove('hidden');
+                if (hintEl) hintEl.textContent = 'Multi-Semester Degree CGPA & Classification Tracker';
+            } else {
+                // BOTH side-by-side
+                matrixSection.classList.remove('hidden');
+                standaloneBanner.classList.add('hidden');
+                standaloneCard.classList.remove('hidden');
+                cgpaAnalyticsCard.classList.remove('hidden');
+                trajectoryCard.classList.remove('hidden');
+                targetPlannerCard.classList.remove('hidden');
+                if (syncBtn) syncBtn.classList.add('hidden');
+                if (hintEl) hintEl.textContent = 'Viewing both Single-Semester GPA & Full Degree CGPA';
+            }
+
+            lucide.createIcons();
+        }
+
+        function syncGpaToCgpaTracker() {
+            saveState();
+            setCalculatorMode('BOTH');
+            showToast(`Semester ${appState.activeSemester} GPA synced with Full Degree CGPA Tracker`);
+        }
+
+        document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('au_gradepro_theme', isDark ? 'dark' : 'light');
+        });
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success'
+                ? 'bg-slate-900 dark:bg-slate-800 text-white border-emerald-500/50'
+                : 'bg-rose-950 text-rose-100 border-rose-500/50';
+            toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl border shadow-lg text-xs font-semibold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 ${bgClass}`;
+            toast.innerHTML = `<span class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}"></span><span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2800);
+        }
+
+        // =========================================================================
+        // 5. PROGRAM, REGULATION & DEPARTMENT HANDLERS
+        // =========================================================================
+        function setProgramLevel(level, skipConfirm = false) {
+            if (appState.level === level) return;
+            appState.level = level;
+            appState.activeSemester = 1;
+            appState.department = DEPARTMENTS[level][0].id;
+            appState.semesters = {};
+
+            populateDepartmentDropdown();
+            loadDepartmentTemplate(false);
+            updateProgramLevelUI();
+            saveState();
+            showToast(`Switched to ${level === 'UG' ? 'Undergraduate (8 Semesters)' : 'Postgraduate (4 Semesters)'}`);
+        }
+
+        function updateProgramLevelUI() {
+            const btnUg = document.getElementById('btn-level-ug');
+            const btnPg = document.getElementById('btn-level-pg');
+            const activeClasses = ['bg-white', 'dark:bg-slate-900', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm'];
+            const inactiveClasses = ['text-slate-600', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-white'];
+
+            if (appState.level === 'UG') {
+                btnUg.classList.add(...activeClasses);
+                btnUg.classList.remove(...inactiveClasses);
+                btnPg.classList.remove(...activeClasses);
+                btnPg.classList.add(...inactiveClasses);
+                document.getElementById('sem-count-label').textContent = '8 Semesters';
+            } else {
+                btnPg.classList.add(...activeClasses);
+                btnPg.classList.remove(...inactiveClasses);
+                btnUg.classList.remove(...activeClasses);
+                btnUg.classList.add(...inactiveClasses);
+                document.getElementById('sem-count-label').textContent = '4 Semesters';
+            }
+        }
+
+        function populateDepartmentDropdown() {
+            const select = document.getElementById('select-department');
+            const list = DEPARTMENTS[appState.level];
+
+            // Group options by Specialized vs Core
+            const groups = {};
+            list.forEach(d => {
+                if (!groups[d.tag]) groups[d.tag] = [];
+                groups[d.tag].push(d);
+            });
+
+            select.innerHTML = '';
+            Object.keys(groups).forEach(tag => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `${tag} Departments`;
+                groups[tag].forEach(dept => {
+                    const opt = document.createElement('option');
+                    opt.value = dept.id;
+                    opt.textContent = dept.name;
+                    if (dept.id === appState.department) opt.selected = true;
+                    optgroup.appendChild(opt);
+                });
+                select.appendChild(optgroup);
+            });
+        }
+
+        function handleRegulationChange(reg) {
+            const oldReg = appState.regulation;
+            appState.regulation = reg;
+
+            // Map existing grades cleanly when switching between R2013 (S,A,B,C,D,E,U) and R2017/21/25 (O,A+,A,B+,B,C,U)
+            const validLabels = new Set(REGULATIONS[reg].grades.map(g => g.label));
+            const mapTo2013 = { 'O': 'S', 'A+': 'A', 'A': 'B', 'B+': 'C', 'B': 'D', 'C': 'E', 'U': 'U', 'RA': 'U', 'SA': 'U', 'W': 'U' };
+            const mapFrom2013 = { 'S': 'O', 'A': 'A+', 'B': 'A', 'C': 'B+', 'D': 'B', 'E': 'C', 'U': 'U' };
+
+            Object.keys(appState.semesters).forEach(sem => {
+                appState.semesters[sem].forEach(course => {
+                    if (!validLabels.has(course.grade)) {
+                        if (reg === 'R2013') {
+                            course.grade = mapTo2013[course.grade] || 'A';
+                        } else if (oldReg === 'R2013') {
+                            course.grade = mapFrom2013[course.grade] || 'A+';
+                        } else if (reg === 'R2017' && course.grade === 'C') {
+                            course.grade = 'B';
+                        } else if (reg === 'R2017' && course.grade === 'U') {
+                            course.grade = 'RA';
+                        } else if (course.grade === 'RA') {
+                            course.grade = 'U';
+                        }
+                    }
+                });
+            });
+
+            renderRegulationPills();
+            populateQuickFillOptions();
+            renderAll();
+            saveState();
+            showToast(`Applied ${REGULATIONS[reg].name} grade points`);
+        }
+
+        function handleDepartmentChange(deptId) {
+            appState.department = deptId;
+            loadDepartmentTemplate(true);
+        }
+
+        function loadDepartmentTemplate(notify = true) {
+            const template = getDepartmentCurriculum(appState.department, appState.level);
+            const maxSems = getMaxSemesters();
+            const defaultGrade = getDefaultPassingGrade();
+
+            appState.semesters = {};
+            for (let s = 1; s <= maxSems; s++) {
+                const semCourses = template[s] || [];
+                appState.semesters[s] = semCourses.map(item => ({
+                    id: generateId(),
+                    code: item.code,
+                    title: item.title,
+                    credits: item.credits,
+                    grade: defaultGrade
+                }));
+            }
+
+            renderAll();
+            saveState();
+            if (notify) {
+                const deptObj = DEPARTMENTS[appState.level].find(d => d.id === appState.department);
+                showToast(`Loaded ${deptObj ? deptObj.id : appState.department} curriculum (${maxSems} semesters)`);
+            }
+        }
+
+        function renderRegulationPills() {
+            const regObj = REGULATIONS[appState.regulation];
+            document.getElementById('reg-scale-label').textContent = `${regObj.name} Grade Points:`;
+            const container = document.getElementById('grade-scale-pills');
+
+            container.innerHTML = regObj.grades.map(g => {
+                const style = g.isFail
+                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/70'
+                    : g.points >= 9
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/70'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+                return `<span class="px-2 py-0.5 rounded-md border font-semibold ${style}">${g.label}: ${g.points}</span>`;
+            }).join('');
+        }
+
+        function populateQuickFillOptions() {
+            const select = document.getElementById('quick-fill-select');
+            const grades = REGULATIONS[appState.regulation].grades;
+            select.innerHTML = `<option value="">Quick Fill All...</option>` +
+                grades.map(g => `<option value="${g.label}">Set All to ${g.label} (${g.points} pts)</option>`).join('');
+        }
+
+        // =========================================================================
+        // 6. COURSE MANIPULATION ACTIONS
+        // =========================================================================
+        function selectSemester(sem) {
+            appState.activeSemester = sem;
+            const standaloneDropdown = document.getElementById('standalone-sem-dropdown');
+            if (standaloneDropdown) standaloneDropdown.value = String(sem);
+            renderAll();
+            saveState();
+        }
+
+        function addCourseRow(preset = null) {
+            const sem = appState.activeSemester;
+            if (!appState.semesters[sem]) appState.semesters[sem] = [];
+
+            const count = appState.semesters[sem].length + 1;
+            const defaultGrade = getDefaultPassingGrade();
+
+            const newCourse = preset || {
+                id: generateId(),
+                code: `${appState.department.slice(0, 2)}3${sem}0${count}`,
+                title: `Subject ${count}`,
+                credits: 3,
+                grade: defaultGrade
+            };
+
+            appState.semesters[sem].push(newCourse);
+            renderAll();
+            saveState();
+        }
+
+        function addPresetCourse(type) {
+            const sem = appState.activeSemester;
+            const count = (appState.semesters[sem]?.length || 0) + 1;
+            const defaultGrade = getDefaultPassingGrade();
+
+            if (type === 'LAB') {
+                addCourseRow({
+                    id: generateId(),
+                    code: `${appState.department.slice(0, 2)}3${sem}1${count}`,
+                    title: 'Practical / Laboratory Course',
+                    credits: 1.5,
+                    grade: defaultGrade
+                });
+            } else if (type === 'PROJECT') {
+                addCourseRow({
+                    id: generateId(),
+                    code: `${appState.department.slice(0, 2)}4${sem}1${count}`,
+                    title: appState.level === 'PG' ? 'Project Work / Thesis Phase' : 'Capstone Project Work',
+                    credits: appState.level === 'PG' ? 12 : 10,
+                    grade: defaultGrade
+                });
+            }
+        }
+
+        function updateCourseField(courseId, field, value) {
+            const sem = appState.activeSemester;
+            const list = appState.semesters[sem] || [];
+            const course = list.find(c => c.id === courseId);
+            if (!course) return;
+
+            if (field === 'credits') {
+                const parsed = parseFloat(value);
+                course.credits = isNaN(parsed) || parsed < 0 ? 0 : Math.min(parsed, 30);
+            } else {
+                course[field] = value;
+            }
+
+            if (field === 'grade') {
+                renderCoursesList();
+            }
+            renderAnalyticsAndTabs();
+            saveState();
+        }
+
+        function deleteCourseRow(courseId) {
+            const sem = appState.activeSemester;
+            appState.semesters[sem] = (appState.semesters[sem] || []).filter(c => c.id !== courseId);
+            renderAll();
+            saveState();
+        }
+
+        function quickFillGrades(gradeLabel) {
+            if (!gradeLabel) return;
+            const sem = appState.activeSemester;
+            (appState.semesters[sem] || []).forEach(c => {
+                c.grade = gradeLabel;
+            });
+            document.getElementById('quick-fill-select').value = '';
+            renderAll();
+            saveState();
+            showToast(`Set all Semester ${sem} grades to ${gradeLabel}`);
+        }
+
+        function clearCurrentSemester() {
+            const sem = appState.activeSemester;
+            appState.semesters[sem] = [];
+            renderAll();
+            saveState();
+            showToast(`Cleared Semester ${sem} courses`, 'error');
+        }
+
+        function toggleArrearMode(checked) {
+            appState.includeArrears = checked;
+            renderAnalyticsAndTabs();
+            saveState();
+        }
+
+        // =========================================================================
+        // 7. ANNA UNIVERSITY GPA & CGPA CALCULATION ENGINE
+        // =========================================================================
+        function getGradePoint(gradeLabel) {
+            const regGrades = REGULATIONS[appState.regulation].grades;
+            const found = regGrades.find(g => g.label === gradeLabel);
+            return found ? found : { points: 0, isFail: false };
+        }
+
+        function calculateSemesterStats(semNumber) {
+            const courses = appState.semesters[semNumber] || [];
+            let registeredCredits = 0;
+            let earnedCredits = 0;
+            let denominatorCredits = 0;
+            let weightedPoints = 0;
+            let arrearCount = 0;
+
+            courses.forEach(c => {
+                const credits = Number(c.credits) || 0;
+                const gradeObj = getGradePoint(c.grade);
+
+                registeredCredits += credits;
+
+                if (gradeObj.isFail) {
+                    arrearCount++;
+                    if (appState.includeArrears) {
+                        denominatorCredits += credits;
+                    }
+                } else {
+                    earnedCredits += credits;
+                    denominatorCredits += credits;
+                    weightedPoints += credits * gradeObj.points;
+                }
+            });
+
+            const gpa = denominatorCredits > 0 ? weightedPoints / denominatorCredits : 0;
+
+            return {
+                courseCount: courses.length,
+                registeredCredits,
+                earnedCredits,
+                denominatorCredits,
+                weightedPoints,
+                arrearCount,
+                gpa
+            };
+        }
+
+        function calculateOverallStats() {
+            const maxSems = getMaxSemesters();
+            let totalRegisteredCredits = 0;
+            let totalEarnedCredits = 0;
+            let totalDenominatorCredits = 0;
+            let totalWeightedPoints = 0;
+            let totalArrears = 0;
+            const perSemester = {};
+
+            for (let s = 1; s <= maxSems; s++) {
+                const stats = calculateSemesterStats(s);
+                perSemester[s] = stats;
+                totalRegisteredCredits += stats.registeredCredits;
+                totalEarnedCredits += stats.earnedCredits;
+                totalDenominatorCredits += stats.denominatorCredits;
+                totalWeightedPoints += stats.weightedPoints;
+                totalArrears += stats.arrearCount;
+            }
+
+            const cgpa = totalDenominatorCredits > 0 ? totalWeightedPoints / totalDenominatorCredits : 0;
+            const percentage = cgpa * 10;
+
+            // Official Anna University Degree Classification Norms
+            let classification = 'Pending Grades';
+            if (totalDenominatorCredits > 0) {
+                if (cgpa >= 8.5 && totalArrears === 0) {
+                    classification = 'First Class with Distinction';
+                } else if (cgpa >= 6.5) {
+                    classification = 'First Class';
+                } else if (cgpa >= 5.0) {
+                    classification = 'Second Class';
+                } else {
+                    classification = 'Below Pass Threshold';
+                }
+            }
+
+            return {
+                perSemester,
+                totalRegisteredCredits,
+                totalEarnedCredits,
+                totalDenominatorCredits,
+                totalWeightedPoints,
+                totalArrears,
+                cgpa,
+                percentage,
+                classification
+            };
+        }
+
+        // =========================================================================
+        // 8. RENDERING UI COMPONENTS
+        // =========================================================================
+        function renderAll() {
+            renderSemesterTabs();
+            renderStandaloneSemesterDropdown();
+            renderCoursesList();
+            renderAnalyticsAndTabs();
+            lucide.createIcons();
+        }
+
+        function renderStandaloneSemesterDropdown() {
+            const dropdown = document.getElementById('standalone-sem-dropdown');
+            if (!dropdown) return;
+            const maxSems = getMaxSemesters();
+            let opts = '';
+            for (let s = 1; s <= maxSems; s++) {
+                opts += `<option value="${s}" ${s === appState.activeSemester ? 'selected' : ''}>Semester ${s}</option>`;
+            }
+            dropdown.innerHTML = opts;
+        }
+
+        function renderSemesterTabs() {
+            const container = document.getElementById('semester-tabs');
+            const maxSems = getMaxSemesters();
+            container.className = maxSems === 8
+                ? 'grid grid-cols-4 sm:grid-cols-8 gap-2'
+                : 'grid grid-cols-2 sm:grid-cols-4 gap-2.5';
+
+            let html = '';
+            for (let s = 1; s <= maxSems; s++) {
+                const isActive = s === appState.activeSemester;
+                const stats = calculateSemesterStats(s);
+                const hasCourses = stats.courseCount > 0;
+
+                const btnStyle = isActive
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500';
+
+                html += `
+          <button onclick="selectSemester(${s})" class="p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center ${btnStyle}">
+            <span class="text-[11px] font-bold uppercase tracking-wider opacity-85">Sem ${s}</span>
+            <span class="font-mono font-bold text-xs sm:text-sm mt-0.5">
+              ${hasCourses ? stats.gpa.toFixed(2) : '—'}
+            </span>
+          </button>
+        `;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderAllSemestersMatrix(overall) {
+            const grid = document.getElementById('all-semesters-matrix-grid');
+            if (!grid) return;
+            const maxSems = getMaxSemesters();
+            grid.className = maxSems === 8
+                ? 'grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5'
+                : 'grid grid-cols-2 sm:grid-cols-4 gap-3';
+
+            let bestGpa = 0;
+            let html = '';
+
+            for (let s = 1; s <= maxSems; s++) {
+                const stats = overall.perSemester[s];
+                const isActive = s === appState.activeSemester;
+                if (stats.courseCount > 0 && stats.gpa > bestGpa) {
+                    bestGpa = stats.gpa;
+                }
+
+                const cardStyle = isActive
+                    ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 ring-2 ring-indigo-500/20'
+                    : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 hover:border-indigo-300 dark:hover:border-indigo-700';
+
+                html += `
+          <button onclick="selectSemester(${s})" class="p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${cardStyle}">
+            <div class="flex items-center justify-between w-full">
+              <span class="text-[11px] font-bold uppercase tracking-wider ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400'}">Sem ${s}</span>
+              ${stats.arrearCount > 0 ? `<span class="w-2 h-2 rounded-full bg-rose-500" title="${stats.arrearCount} Arrear(s)"></span>` : ''}
+            </div>
+            <div class="mt-1.5 flex items-baseline justify-between w-full">
+              <span class="font-mono font-extrabold text-base ${stats.courseCount > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}">
+                ${stats.courseCount > 0 ? stats.gpa.toFixed(2) : '—'}
+              </span>
+              <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">${stats.earnedCredits} Cr</span>
+            </div>
+          </button>
+        `;
+            }
+
+            grid.innerHTML = html;
+            document.getElementById('matrix-best-gpa').textContent = bestGpa > 0 ? bestGpa.toFixed(2) : '—';
+            document.getElementById('matrix-overall-cgpa').textContent = overall.cgpa.toFixed(2);
+        }
+
+        function renderCoursesList() {
+            const sem = appState.activeSemester;
+            const courses = appState.semesters[sem] || [];
+            const container = document.getElementById('courses-list');
+            const emptyState = document.getElementById('empty-courses-state');
+            const regGrades = REGULATIONS[appState.regulation].grades;
+
+            document.getElementById('active-sem-title').textContent = `Semester ${sem} Courses`;
+
+            if (courses.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            const standardCredits = [0, 1, 1.5, 2, 3, 4, 6, 10, 12];
+
+            container.innerHTML = courses.map(course => {
+                const gradeObj = getGradePoint(course.grade);
+                const gradeSelectColor = gradeObj.isFail
+                    ? 'border-rose-300 bg-rose-50/80 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300'
+                    : gradeObj.points >= 9
+                        ? 'border-emerald-300 bg-emerald-50/70 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
+
+                const gradeOptionsHtml = regGrades.map(g =>
+                    `<option value="${g.label}" ${g.label === course.grade ? 'selected' : ''}>${g.label} (${g.points})</option>`
+                ).join('');
+
+                const numCr = Number(course.credits);
+                const isPresetCredit = standardCredits.includes(numCr);
+                const creditOptions = isPresetCredit ? standardCredits : [...standardCredits, numCr].sort((a, b) => a - b);
+
+                return `
+          <div class="p-3.5 sm:px-5 sm:py-3 grid grid-cols-12 gap-2.5 sm:gap-3 items-center hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition">
+            <!-- Course Code -->
+            <div class="col-span-4 sm:col-span-2">
+              <label class="block sm:hidden text-[10px] font-bold uppercase text-slate-400 mb-0.5">Code</label>
+              <input type="text" value="${escapeHtml(course.code)}" onchange="updateCourseField('${course.id}', 'code', this.value)"
+                class="w-full rounded-lg bg-transparent hover:bg-white dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-indigo-500 px-2 py-1.5 font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 focus:outline-none transition" />
+            </div>
+
+            <!-- Course Title -->
+            <div class="col-span-8 sm:col-span-5">
+              <label class="block sm:hidden text-[10px] font-bold uppercase text-slate-400 mb-0.5">Subject Name</label>
+              <input type="text" value="${escapeHtml(course.title)}" onchange="updateCourseField('${course.id}', 'title', this.value)"
+                class="w-full rounded-lg bg-transparent hover:bg-white dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-indigo-500 px-2 py-1.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none transition" />
+            </div>
+
+            <!-- Credits Selector (AU Standard Credits + Custom Input Support) -->
+            <div class="col-span-5 sm:col-span-2">
+              <label class="block sm:hidden text-[10px] font-bold uppercase text-slate-400 mb-0.5">Credits</label>
+              <select onchange="updateCourseField('${course.id}', 'credits', this.value)"
+                class="w-full text-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1.5 font-mono text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition">
+                ${creditOptions.map(cr => `<option value="${cr}" ${cr === numCr ? 'selected' : ''}>${cr} Cr</option>`).join('')}
+              </select>
+            </div>
+
+            <!-- Grade Selector -->
+            <div class="col-span-5 sm:col-span-2">
+              <label class="block sm:hidden text-[10px] font-bold uppercase text-slate-400 mb-0.5">Grade</label>
+              <select onchange="updateCourseField('${course.id}', 'grade', this.value)"
+                class="w-full rounded-xl border px-2.5 py-1.5 font-mono text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition ${gradeSelectColor}">
+                ${gradeOptionsHtml}
+              </select>
+            </div>
+
+            <!-- Remove Row -->
+            <div class="col-span-2 sm:col-span-1 flex justify-end items-end sm:items-center pt-4 sm:pt-0">
+              <button onclick="deleteCourseRow('${course.id}')" title="Remove Subject" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        function renderStandaloneGpaReportCard(activeStats) {
+            const sem = appState.activeSemester;
+            const courses = appState.semesters[sem] || [];
+            const regGrades = REGULATIONS[appState.regulation].grades;
+
+            document.getElementById('report-sem-heading').textContent = `Semester ${sem} GPA Summary`;
+            document.getElementById('report-exact-gpa').textContent = activeStats.gpa.toFixed(3);
+            document.getElementById('report-sem-formula').textContent = `Σ(Cᵢ × GPᵢ) / ΣCᵢ = ${activeStats.weightedPoints.toFixed(1)} / ${activeStats.denominatorCredits}`;
+            document.getElementById('report-sem-percentage').textContent = `${(activeStats.gpa * 10).toFixed(2)}%`;
+            document.getElementById('report-sem-subjects-count').textContent = `${activeStats.courseCount} Subject${activeStats.courseCount === 1 ? '' : 's'}`;
+
+            document.getElementById('report-reg-credits').textContent = `${activeStats.registeredCredits} Cr`;
+            document.getElementById('report-earned-credits').textContent = `${activeStats.earnedCredits} Cr`;
+            document.getElementById('report-grade-points').textContent = activeStats.weightedPoints.toFixed(1);
+
+            const statusPill = document.getElementById('report-gpa-status-pill');
+            if (activeStats.courseCount === 0) {
+                statusPill.textContent = 'No Subjects';
+                statusPill.className = 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+            } else if (activeStats.arrearCount > 0) {
+                statusPill.textContent = `${activeStats.arrearCount} Arrear${activeStats.arrearCount > 1 ? 's' : ''}`;
+                statusPill.className = 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200/70 dark:border-rose-800/60';
+            } else {
+                statusPill.textContent = 'All Clear';
+                statusPill.className = 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60';
+            }
+
+            // Count occurrences of each grade in the current semester
+            const counts = {};
+            courses.forEach(c => {
+                counts[c.grade] = (counts[c.grade] || 0) + 1;
+            });
+
+            const distContainer = document.getElementById('report-grade-distribution');
+            const activePills = regGrades
+                .filter(g => counts[g.label] > 0)
+                .map(g => {
+                    const pillStyle = g.isFail
+                        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                        : g.points >= 9
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800';
+                    return `<span class="px-2.5 py-1 rounded-lg border font-bold ${pillStyle}">${g.label}: ${counts[g.label]}</span>`;
+                });
+
+            distContainer.innerHTML = activePills.length > 0
+                ? activePills.join('')
+                : `<span class="text-slate-400 font-sans text-xs">Add subjects to view grade distribution</span>`;
+        }
+
+        function renderWhatIfSimulatorControls() {
+            const sem = appState.activeSemester;
+            const courses = appState.semesters[sem] || [];
+            const regGrades = REGULATIONS[appState.regulation].grades;
+
+            document.getElementById('whatif-sem-label').textContent = `Semester ${sem}`;
+            const courseSelect = document.getElementById('whatif-course-select');
+            const gradeSelect = document.getElementById('whatif-grade-select');
+
+            const prevCourseId = courseSelect.value;
+            const prevGrade = gradeSelect.value;
+
+            if (courses.length === 0) {
+                courseSelect.innerHTML = `<option value="">No subjects in Semester ${sem}</option>`;
+            } else {
+                courseSelect.innerHTML = courses.map(c =>
+                    `<option value="${c.id}" ${c.id === prevCourseId ? 'selected' : ''}>${escapeHtml(c.code)} — ${escapeHtml(c.title)} (Current: ${c.grade})</option>`
+                ).join('');
+            }
+
+            const topGrade = regGrades[0].label;
+            gradeSelect.innerHTML = regGrades.map(g =>
+                `<option value="${g.label}" ${(prevGrade ? g.label === prevGrade : g.label === topGrade) ? 'selected' : ''}>${g.label} (${g.points} pts)</option>`
+            ).join('');
+
+            runWhatIfSimulation();
+        }
+
+        function runWhatIfSimulation() {
+            const sem = appState.activeSemester;
+            const courses = appState.semesters[sem] || [];
+            const resultBox = document.getElementById('whatif-result-box');
+            const selectedCourseId = document.getElementById('whatif-course-select').value;
+            const targetGrade = document.getElementById('whatif-grade-select').value;
+
+            const targetCourse = courses.find(c => c.id === selectedCourseId);
+            if (!targetCourse || !targetGrade) {
+                resultBox.innerHTML = `<span class="text-slate-500 dark:text-slate-400">Select a subject above to simulate a grade change.</span>`;
+                return;
+            }
+
+            const currentOverall = calculateOverallStats();
+            const currentSemGpa = currentOverall.perSemester[sem].gpa;
+            const currentCgpa = currentOverall.cgpa;
+
+            // Temporarily compute simulated GPA & CGPA
+            const originalGrade = targetCourse.grade;
+            targetCourse.grade = targetGrade;
+            const simOverall = calculateOverallStats();
+            const simSemGpa = simOverall.perSemester[sem].gpa;
+            const simCgpa = simOverall.cgpa;
+            targetCourse.grade = originalGrade;
+
+            const gpaDelta = simSemGpa - currentSemGpa;
+            const cgpaDelta = simCgpa - currentCgpa;
+
+            const fmtDelta = (val) => {
+                if (Math.abs(val) < 0.0005) return `<span class="text-slate-400">(0.00)</span>`;
+                return val > 0
+                    ? `<span class="text-emerald-600 dark:text-emerald-400 font-bold">(+${val.toFixed(3)})</span>`
+                    : `<span class="text-rose-600 dark:text-rose-400 font-bold">(${val.toFixed(3)})</span>`;
+            };
+
+            resultBox.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">Simulated Sem ${sem} GPA:</span>
+          <span class="font-mono font-bold text-slate-900 dark:text-white">${simSemGpa.toFixed(3)} ${fmtDelta(gpaDelta)}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">Simulated Overall CGPA:</span>
+          <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">${simCgpa.toFixed(3)} ${fmtDelta(cgpaDelta)}</span>
+        </div>
+      `;
+        }
+
+        function applyWhatIfGrade() {
+            const sem = appState.activeSemester;
+            const courses = appState.semesters[sem] || [];
+            const selectedCourseId = document.getElementById('whatif-course-select').value;
+            const targetGrade = document.getElementById('whatif-grade-select').value;
+            const targetCourse = courses.find(c => c.id === selectedCourseId);
+            if (!targetCourse || !targetGrade) return;
+
+            targetCourse.grade = targetGrade;
+            renderAll();
+            saveState();
+            showToast(`Updated ${targetCourse.code} to ${targetGrade}`);
+        }
+
+        function copySemesterGpaSlip() {
+            const sem = appState.activeSemester;
+            const stats = calculateSemesterStats(sem);
+            const deptObj = DEPARTMENTS[appState.level].find(d => d.id === appState.department);
+            const courses = appState.semesters[sem] || [];
+
+            const lines = [
+                `ANNA UNIVERSITY — SEMESTER ${sem} GPA REPORT`,
+                `Department: ${deptObj ? deptObj.name : appState.department}`,
+                `Regulation: ${REGULATIONS[appState.regulation].name}`,
+                `----------------------------------------`,
+                ...courses.map(c => `${c.code} | ${c.title} | ${c.credits} Cr | Grade: ${c.grade}`),
+                `----------------------------------------`,
+                `Registered Credits: ${stats.registeredCredits} | Earned Credits: ${stats.earnedCredits}`,
+                `Exact Semester GPA: ${stats.gpa.toFixed(3)} / 10.00 (${(stats.gpa * 10).toFixed(2)}%)`
+            ];
+
+            const textarea = document.createElement('textarea');
+            textarea.value = lines.join('\n');
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            textarea.remove();
+            showToast(`Semester ${sem} GPA Slip copied to clipboard`);
+        }
+
+        function printSemesterGpaSlip() {
+            const card = document.getElementById('standalone-gpa-report-card');
+            card.classList.add('printing-gpa');
+            window.print();
+            setTimeout(() => card.classList.remove('printing-gpa'), 500);
+        }
+
+        function renderAnalyticsAndTabs() {
+            const overall = calculateOverallStats();
+            const activeStats = overall.perSemester[appState.activeSemester];
+
+            // Update Semester Tabs & All-Semesters GPA Matrix
+            renderSemesterTabs();
+            renderAllSemestersMatrix(overall);
+            renderStandaloneGpaReportCard(activeStats);
+            renderWhatIfSimulatorControls();
+
+            // Update Active Semester Badges
+            document.getElementById('active-sem-credits-badge').textContent = `${activeStats.registeredCredits} Credits`;
+            document.getElementById('active-sem-live-gpa-pill').textContent = `GPA: ${activeStats.gpa.toFixed(3)}`;
+            document.getElementById('gauge-sem-label').textContent = `Semester ${appState.activeSemester}`;
+            document.getElementById('gauge-sem-credits').textContent = `${activeStats.earnedCredits} / ${activeStats.registeredCredits} Cr`;
+
+            // Update Gauges (Circumference = 2 * PI * 40 ≈ 251.2)
+            const circumference = 251.2;
+            const gpaOffset = circumference - (Math.min(activeStats.gpa, 10) / 10) * circumference;
+            const cgpaOffset = circumference - (Math.min(overall.cgpa, 10) / 10) * circumference;
+
+            document.getElementById('gpa-ring').style.strokeDashoffset = gpaOffset;
+            document.getElementById('cgpa-ring').style.strokeDashoffset = cgpaOffset;
+
+            document.getElementById('display-sem-gpa').textContent = activeStats.gpa.toFixed(2);
+            document.getElementById('display-overall-cgpa').textContent = overall.cgpa.toFixed(2);
+            document.getElementById('gauge-total-credits').textContent = `${overall.totalEarnedCredits} Earned Cr`;
+
+            // Update Breakdown Metrics
+            document.getElementById('display-percentage').textContent = `${overall.percentage.toFixed(2)}%`;
+            document.getElementById('display-credits-ratio').textContent = `${overall.totalEarnedCredits} / ${overall.totalRegisteredCredits}`;
+            document.getElementById('display-grade-points').textContent = overall.totalWeightedPoints.toFixed(1);
+
+            const classBadge = document.getElementById('classification-badge');
+            classBadge.textContent = overall.classification;
+            if (overall.classification.includes('Distinction')) {
+                classBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70';
+            } else if (overall.classification === 'First Class') {
+                classBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/70';
+            } else {
+                classBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/70';
+            }
+
+            // Arrears row visibility
+            const arrearRow = document.getElementById('arrear-alert-row');
+            if (overall.totalArrears > 0) {
+                arrearRow.classList.remove('hidden');
+                document.getElementById('display-arrear-count').textContent = `${overall.totalArrears} Subject${overall.totalArrears > 1 ? 's' : ''}`;
+            } else {
+                arrearRow.classList.add('hidden');
+            }
+
+            renderGpaTrendChart(overall.perSemester);
+            updateTargetEstimator(overall);
+            lucide.createIcons();
+        }
+
+        function renderGpaTrendChart(perSemester) {
+            const chartContainer = document.getElementById('gpa-bar-chart');
+            const labelsContainer = document.getElementById('gpa-bar-labels');
+            const maxSems = getMaxSemesters();
+
+            let barsHtml = '';
+            let labelsHtml = '';
+
+            for (let s = 1; s <= maxSems; s++) {
+                const stats = perSemester[s];
+                const heightPct = stats.courseCount > 0 ? Math.max((stats.gpa / 10) * 100, 6) : 4;
+                const isCurrent = s === appState.activeSemester;
+
+                const barColor = stats.courseCount === 0
+                    ? 'bg-slate-200 dark:bg-slate-800'
+                    : isCurrent
+                        ? 'bg-indigo-600 dark:bg-indigo-500 shadow-sm shadow-indigo-500/30'
+                        : 'bg-emerald-500/80 hover:bg-emerald-500 dark:bg-emerald-500/70';
+
+                barsHtml += `
+          <button onclick="selectSemester(${s})" title="Sem ${s}: GPA ${stats.gpa.toFixed(2)}" class="flex-1 h-full flex flex-col items-center justify-end group focus:outline-none">
+            <span class="text-[10px] font-mono font-bold mb-1 opacity-0 group-hover:opacity-100 transition text-slate-600 dark:text-slate-300">
+              ${stats.courseCount > 0 ? stats.gpa.toFixed(1) : ''}
+            </span>
+            <div style="height: ${heightPct}%" class="w-full max-w-[28px] rounded-t-lg transition-all duration-500 ${barColor}"></div>
+          </button>
+        `;
+
+                labelsHtml += `
+          <span class="flex-1 text-center ${isCurrent ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}">S${s}</span>
+        `;
+            }
+
+            chartContainer.innerHTML = barsHtml;
+            labelsContainer.innerHTML = labelsHtml;
+        }
+
+        function updateTargetEstimator(cachedOverall = null) {
+            const overall = cachedOverall || calculateOverallStats();
+            const targetCgpa = parseFloat(document.getElementById('input-target-cgpa').value) || 8.5;
+            const remCredits = parseFloat(document.getElementById('input-remaining-credits').value) || 0;
+            const resultEl = document.getElementById('target-estimator-result');
+
+            if (remCredits <= 0) {
+                resultEl.textContent = 'Enter remaining credits greater than 0.';
+                return;
+            }
+
+            const currentCredits = overall.totalDenominatorCredits;
+            const currentPoints = overall.totalWeightedPoints;
+            const requiredTotalPoints = targetCgpa * (currentCredits + remCredits);
+            const neededPoints = requiredTotalPoints - currentPoints;
+            const requiredGpa = neededPoints / remCredits;
+
+            if (requiredGpa > 10) {
+                resultEl.innerHTML = `Target <span class="font-mono font-bold">${targetCgpa.toFixed(2)}</span> requires <span class="font-mono font-bold text-rose-600 dark:text-rose-400">${requiredGpa.toFixed(2)} GPA</span> (exceeds 10.0 scale). Try increasing remaining credits or lowering target.`;
+            } else if (requiredGpa <= 0) {
+                resultEl.innerHTML = `Congratulations! You have already secured enough grade points for a <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${targetCgpa.toFixed(2)}</span> CGPA.`;
+            } else {
+                resultEl.innerHTML = `You need an average of <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">${requiredGpa.toFixed(2)} GPA</span> across your next <span class="font-mono font-bold">${remCredits} credits</span>.`;
+            }
+        }
+
+        // =========================================================================
+        // 9. GRADE SHEET MODAL, EXPORT & IMPORT BACKUP
+        // =========================================================================
+        document.getElementById('btn-grade-sheet').addEventListener('click', () => {
+            const overall = calculateOverallStats();
+            const deptObj = DEPARTMENTS[appState.level].find(d => d.id === appState.department);
+            const maxSems = getMaxSemesters();
+
+            document.getElementById('sheet-dept-title').textContent = deptObj ? deptObj.name : appState.department;
+            document.getElementById('sheet-meta-subtitle').textContent = `${REGULATIONS[appState.regulation].name} • ${appState.level === 'UG' ? 'Undergraduate (8 Semesters)' : 'Postgraduate (4 Semesters)'}`;
+            document.getElementById('sheet-cgpa-val').textContent = overall.cgpa.toFixed(2);
+            document.getElementById('sheet-perc-val').textContent = `${overall.percentage.toFixed(2)}%`;
+            document.getElementById('sheet-class-val').textContent = overall.classification;
+
+            const breakdownContainer = document.getElementById('sheet-semesters-breakdown');
+            let html = '';
+
+            for (let s = 1; s <= maxSems; s++) {
+                const courses = appState.semesters[s] || [];
+                if (courses.length === 0) continue;
+                const stats = overall.perSemester[s];
+
+                html += `
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-between text-xs font-bold">
+              <span>Semester ${s}</span>
+              <span class="font-mono text-indigo-600 dark:text-indigo-400">GPA: ${stats.gpa.toFixed(2)} • Credits: ${stats.earnedCredits}/${stats.registeredCredits}</span>
+            </div>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 border-b border-slate-200/60 dark:border-slate-800">
+                <tr>
+                  <th class="py-2 px-4">Code</th>
+                  <th class="py-2 px-4">Course Title</th>
+                  <th class="py-2 px-4 text-center">Credits</th>
+                  <th class="py-2 px-4 text-center">Grade</th>
+                  <th class="py-2 px-4 text-right">Points</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                ${courses.map(c => {
+                    const gp = getGradePoint(c.grade);
+                    return `
+                    <tr>
+                      <td class="py-1.5 px-4 font-mono font-semibold text-slate-600 dark:text-slate-300">${escapeHtml(c.code)}</td>
+                      <td class="py-1.5 px-4 font-medium">${escapeHtml(c.title)}</td>
+                      <td class="py-1.5 px-4 text-center font-mono">${c.credits}</td>
+                      <td class="py-1.5 px-4 text-center font-mono font-bold ${gp.isFail ? 'text-rose-600' : ''}">${c.grade}</td>
+                      <td class="py-1.5 px-4 text-right font-mono">${(c.credits * gp.points).toFixed(1)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+            }
+
+            breakdownContainer.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6">No courses entered yet.</p>`;
+
+            const modal = document.getElementById('modal-grade-sheet');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        });
+
+        function closeGradeSheetModal() {
+            const modal = document.getElementById('modal-grade-sheet');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Export JSON Backup
+        document.getElementById('btn-export-json').addEventListener('click', () => {
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute('href', dataStr);
+            downloadAnchor.setAttribute('download', `AU_CGPA_${appState.department}_${appState.regulation}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('Exported JSON grade backup');
+        });
+
+        // Import JSON Backup
+        document.getElementById('input-import-json').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (imported && imported.semesters && imported.regulation) {
+                        appState = { ...appState, ...imported };
+                        document.getElementById('select-regulation').value = appState.regulation;
+                        document.getElementById('toggle-include-arrears').checked = !!appState.includeArrears;
+                        updateProgramLevelUI();
+                        populateDepartmentDropdown();
+                        renderRegulationPills();
+                        populateQuickFillOptions();
+                        renderAll();
+                        saveState();
+                        showToast('Successfully restored academic record');
+                    } else {
+                        showToast('Invalid backup file format', 'error');
+                    }
+                } catch (err) {
+                    showToast('Failed to parse JSON file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // =========================================================================
+        // 10. BOOTSTRAP APPLICATION ON LOAD
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            const hasSaved = loadState();
+            applyTypographyMode();
+            updateCalculatorModeUI();
+
+            document.getElementById('select-regulation').value = appState.regulation;
+            document.getElementById('toggle-include-arrears').checked = !!appState.includeArrears;
+
+            updateProgramLevelUI();
+            populateDepartmentDropdown();
+            renderRegulationPills();
+            populateQuickFillOptions();
+
+            if (!hasSaved || Object.keys(appState.semesters).length === 0) {
+                loadDepartmentTemplate(false);
+            } else {
+                renderAll();
+            }
+        });
+    </script>
+</body>
+
+</html>
